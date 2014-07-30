@@ -607,3 +607,16 @@ class SplitTestDescriptor(SplitTestFields, SequenceDescriptor, StudioEditableDes
         )
         self.children.append(dest_usage_key)  # pylint: disable=no-member
         self.group_id_to_child[unicode(group.id)] = dest_usage_key
+
+
+    def get_display_name_for_vertical(self, vertical):
+        user_partition = self.get_selected_partition()
+
+        modulestore = self.system.modulestore
+
+        for group in getattr(user_partition, 'groups', []):
+            group_id = unicode(group.id)
+            child_location = self.group_id_to_child.get(group_id, None)
+
+            if child_location == vertical.location and vertical.display_name != group.name:
+                return group.name

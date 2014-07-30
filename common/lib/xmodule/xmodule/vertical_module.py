@@ -5,6 +5,8 @@ from xmodule.progress import Progress
 from xmodule.studio_editable import StudioEditableModule, StudioEditableDescriptor
 from pkg_resources import resource_string
 from copy import copy
+from xblock.core import XBlock
+
 
 # HACK: This shouldn't be hard-coded to two types
 # OBSOLETE: This obsoletes 'type'
@@ -17,6 +19,35 @@ class VerticalFields(object):
 
 class VerticalModule(VerticalFields, XModule, StudioEditableModule):
     ''' Layout module for laying out submodules vertically.'''
+
+    def __init__(self, *args, **kwargs):
+        super(VerticalModule, self).__init__(*args, **kwargs)
+
+        self.update_names()
+
+    def update_names(self):
+        """
+        Updates old vertical names with new.
+
+        Use case: when one has edited Group Configuration page in split test module,
+        verticals are not updated automatically. 
+        This is done for the old courses, where already exists difference between vertical names
+        stored in group configuration data and vertical names, stored in vertical xfields.
+        """
+        parent = self.get_parent_xblock()
+        if getattr(parent, 'get_display_name_for_vertical'):
+            updated_name = parent.get_display_name_for_vertical(self)
+            if updated_name:
+                self.display_name = updated_name
+                user_id = self.descriptor.runtime.service(self.descriptor, 'user').user_id
+                self.descriptor.runtime.modulestore.update_item(self.descriptor, user_id)
+
+    def get_parent_xblock(self):
+        """
+        Get parent xblock for the current xblock.
+        """
+        parent_location = self.descriptor.runtime.modulestore.get_parent_location(self.location)
+        return self.descriptor.runtime.modulestore.get_item(parent_location)
 
     def student_view(self, context):
         fragment = Fragment()
@@ -71,6 +102,7 @@ class VerticalModule(VerticalFields, XModule, StudioEditableModule):
         return new_class
 
 
+@XBlock.wants('user')
 class VerticalDescriptor(VerticalFields, SequenceDescriptor, StudioEditableDescriptor):
     """
     Descriptor class for editing verticals.

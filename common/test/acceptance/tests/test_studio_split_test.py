@@ -18,6 +18,8 @@ from ..pages.studio.settings_advanced import AdvancedSettingsPage
 from ..pages.studio.container import ContainerPage
 from ..pages.studio.settings_group_configurations import GroupConfigurationsPage
 from ..pages.studio.utils import add_advanced_component
+from ..pages.studio.unit import UnitPage
+from ..pages.studio.container import ContainerPage
 from ..pages.xblock.utils import wait_for_xblock_initialization
 
 from .base_studio_test import StudioCourseTest
@@ -427,16 +429,6 @@ class GroupConfigurationsTest(ContainerBase, SplitTestMixin):
         And I add new advanced module "Content Experiment"
         When I assign created group configuration to the module
         Then I see the module has correct groups
-        And I go to the Group Configuration page in Studio
-        And I edit the name of the group configuration, add new group and remove old one
-        And I go to the unit page in Studio
-        And I edit the unit
-        Then I see the group configuration name is changed in `Group Configuration` dropdown
-        And the group configuration name is changed on container page
-        And I see the module has 2 active groups and one inactive
-        And I see "Add missing groups" link exists
-        When I click on "Add missing groups" link
-        The I see the module has 3 active groups and one inactive
         """
         self.page.visit()
         # Create new group configuration
@@ -449,18 +441,52 @@ class GroupConfigurationsTest(ContainerBase, SplitTestMixin):
         # Save the configuration
         config.save()
 
-        unit = self.go_to_unit_page()
-        add_advanced_component(unit, 0, 'split_test')
-        container = self.go_to_nested_container_page()
+        vertical = self.course_fixture.get_nested_xblocks(category="vertical")[0]
+        split_test = XBlockFixtureDesc('split_test', 'Test Content Experiment')
+        self.course_fixture.create_xblock(vertical.locator, split_test)
+
+        container = ContainerPage(self.browser, split_test.locator)
+        container.visit()
         container.edit()
         component_editor = ComponentEditorView(self.browser, container.locator)
         component_editor.set_select_value_and_save('Group Configuration', 'New Group Configuration Name')
         self.verify_groups(container, ['Group A', 'Group B', 'New group'], [])
 
+    def test_container_page_updates_with_actual_data(self):
+        """
+        Scenario: Ensure that the Content Experiment display an actual data
+        Given I have a course with group configuration
+        And I go to the Group Configuration page in Studio
+        And I edit the name of the group configuration, add new group and remove old one
+        And I change the name for the group "New group" to "Second Group"
+        And I go to the Container page in Studio
+        And I edit the Content Experiment
+        Then I see the group configuration name is changed in `Group Configuration` dropdown
+        And the group configuration name is changed on container page
+        And I see the module has 2 active groups and one inactive
+        And I see "Add missing groups" link exists
+        When I click on "Add missing groups" link
+        The I see the module has 3 active groups and one inactive
+        """
+        self.course_fixture._update_xblock(self.course_fixture._course_location, {
+            "metadata": {
+                u"user_partitions": [
+                    UserPartition(0, 'Name of the Group Configuration', 'Description of the group configuration.', [Group("0", 'Group A'), Group("1", 'Group B'), Group("2", 'Group C')]).to_json(),
+                ],
+            },
+        })
+
+        # Assign newly created group configuration to unit
+        vertical = self.course_fixture.get_nested_xblocks(category="vertical")[0]
+        split_test = XBlockFixtureDesc('split_test', 'Test Content Experiment', metadata={'user_partition_id': 0})
+        self.course_fixture.create_xblock(vertical.locator, split_test)
+
         self.page.visit()
         config = self.page.group_configurations[0]
         config.edit()
         config.name = "Second Group Configuration Name"
+        # `Group C` -> `Second Group`
+        config.groups[2].name = "Second Group"
         # Add new group
         config.add_group()  # Group D
         # Remove Group A
@@ -468,7 +494,8 @@ class GroupConfigurationsTest(ContainerBase, SplitTestMixin):
         # Save the configuration
         config.save()
 
-        container = self.go_to_nested_container_page()
+        container = ContainerPage(self.browser, split_test.locator)
+        container.visit()
         container.edit()
         component_editor = ComponentEditorView(self.browser, container.locator)
         self.assertEqual(
@@ -481,12 +508,12 @@ class GroupConfigurationsTest(ContainerBase, SplitTestMixin):
             container.get_xblock_information_message()
         )
         self.verify_groups(
-            container, ['Group B', 'New group'], ['Group A'],
+            container, ['Group B', 'Second Group'], ['Group A'],
             verify_missing_groups_not_present=False
         )
         # Click the add button and verify that the groups were added on the page
         container.add_missing_groups()
-        self.verify_groups(container, ['Group B', 'New group', 'Group D'], ['Group A'])
+        self.verify_groups(container, ['Group B', 'Second Group', 'Group D'], ['Group A'])
 
     def test_can_cancel_creation_of_group_configuration(self):
         """
