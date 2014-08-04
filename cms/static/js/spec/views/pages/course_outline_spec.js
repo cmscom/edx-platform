@@ -362,7 +362,9 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     $(".edit-outline-item-modal .action-save").click();
 
                     create_sinon.expectJsonRequest(requests, 'POST', '/xblock/mock-section', {
+                        "publish": "republish",
                         "metadata":{
+                            "visible_to_staff_only": null,
                             "start":"2015-01-02T00:00:00.000Z",
                         }
                     });
@@ -370,7 +372,7 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
 
                     // This is the response for the change operation.
                     create_sinon.respondWithJson(requests, {});
-                    var mockResponseSectionJSON = $.extend(true, {}, 
+                    var mockResponseSectionJSON = $.extend(true, {},
                         createMockSectionJSON('mock-section', 'Mock Section', [
                             createMockSubsectionJSON('mock-subsection', 'Mock Subsection', [{
                                 id: 'mock-unit',
@@ -386,7 +388,7 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                             ])
                         ]),
                         {
-                            release_date: 'Jan 02, 2015 at 00:00 UTC',   
+                            release_date: 'Jan 02, 2015 at 00:00 UTC',
                         }
                     );
                     create_sinon.expectJsonRequest(requests, 'GET', '/xblock/outline/mock-section')
@@ -507,8 +509,10 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     setEditModalValues("7/9/2014", "7/10/2014", "Lab");
                     $(".edit-outline-item-modal .action-save").click();
                     create_sinon.expectJsonRequest(requests, 'POST', '/xblock/mock-subsection', {
+                        "publish": "republish",
                         "graderType":"Lab",
                         "metadata":{
+                            "visible_to_staff_only" : null,
                             "start":"2014-07-09T00:00:00.000Z",
                             "due":"2014-07-10T00:00:00.000Z"
                         }

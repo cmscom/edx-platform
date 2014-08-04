@@ -124,6 +124,8 @@ define(["jquery", "underscore", "underscore.string", "js/spec_helpers/create_sin
                     lastDraftCss = ".wrapper-last-draft",
                     releaseDateTitleCss = ".wrapper-release .title",
                     releaseDateContentCss = ".wrapper-release .copy",
+                    releaseDateDateCss = ".wrapper-release .copy .release-date",
+                    releaseDateWithCss = ".wrapper-release .copy .release-with",
                     promptSpies, sendDiscardChangesToServer, verifyPublishingBitUnscheduled;
 
                 sendDiscardChangesToServer = function() {
@@ -342,8 +344,8 @@ define(["jquery", "underscore", "underscore.string", "js/spec_helpers/create_sin
                             release_date: "Jul 02, 2014 at 14:20 UTC", release_date_from: 'Section "Week 1"'
                         });
                         expect(containerPage.$(releaseDateTitleCss).text()).toContain("Scheduled:");
-                        expect(containerPage.$(releaseDateContentCss).text()).
-                            toContain('Jul 02, 2014 at 14:20 UTC with Section "Week 1"');
+                        expect(containerPage.$(releaseDateDateCss).text()).toContain('Jul 02, 2014 at 14:20 UTC');
+                        expect(containerPage.$(releaseDateWithCss).text()).toContain('with Section "Week 1"');
                     });
 
                     it('renders correctly when released', function () {
@@ -353,8 +355,8 @@ define(["jquery", "underscore", "underscore.string", "js/spec_helpers/create_sin
                             release_date: "Jul 02, 2014 at 14:20 UTC", release_date_from: 'Section "Week 1"'
                         });
                         expect(containerPage.$(releaseDateTitleCss).text()).toContain("Released:");
-                        expect(containerPage.$(releaseDateContentCss).text()).
-                            toContain('Jul 02, 2014 at 14:20 UTC with Section "Week 1"');
+                        expect(containerPage.$(releaseDateDateCss).text()).toContain('Jul 02, 2014 at 14:20 UTC');
+                        expect(containerPage.$(releaseDateWithCss).text()).toContain('with Section "Week 1"');
                     });
 
                     it('renders correctly when the release date is not set', function () {
@@ -375,20 +377,22 @@ define(["jquery", "underscore", "underscore.string", "js/spec_helpers/create_sin
                         });
                         containerPage.xblockPublisher.render();
                         expect(containerPage.$(releaseDateTitleCss).text()).toContain("Release:");
-                        expect(containerPage.$(releaseDateContentCss).text()).
-                            toContain('Jul 02, 2014 at 14:20 UTC with Section "Week 1"');
+                        expect(containerPage.$(releaseDateDateCss).text()).toContain('Jul 02, 2014 at 14:20 UTC');
+                        expect(containerPage.$(releaseDateWithCss).text()).toContain('with Section "Week 1"');
                     });
                 });
 
                 describe("Content Visibility", function () {
-                    var requestStaffOnly, verifyStaffOnly, promptSpy,
+                    var requestStaffOnly, verifyStaffOnly, verifyExplicitStaffOnly, verifyImplicitStaffOnly, promptSpy,
                         visibilityTitleCss = '.wrapper-visibility .title';
 
-                    requestStaffOnly = function(isStaffOnly) {
+                    requestStaffOnly = function(isStaffOnly, keepImplicitStaffOnly) {
+                        var newVisibilityState;
+
                         containerPage.$('.action-staff-lock').click();
 
-                        // If removing the staff lock, click 'Yes' to confirm
-                        if (!isStaffOnly) {
+                        // If removing explicit staff lock with no implicit staff lock, click 'Yes' to confirm
+                        if (!isStaffOnly && !containerPage.model.get('staff_lock_from')) {
                             edit_helpers.confirmPrompt(promptSpy);
                         }
 
@@ -403,29 +407,50 @@ define(["jquery", "underscore", "underscore.string", "js/spec_helpers/create_sin
                                 visible_to_staff_only: isStaffOnly ? true : null
                             }
                         });
+
                         create_sinon.expectJsonRequest(requests, 'GET', '/xblock/locator-container');
+                        if (isStaffOnly || keepImplicitStaffOnly) {
+                            newVisibilityState = VisibilityState.staffOnly;
+                        } else {
+                            newVisibilityState = VisibilityState.live;
+                        }
                         create_sinon.respondWithJson(requests, createXBlockInfo({
                             published: containerPage.model.get('published'),
-                            visibility_state: isStaffOnly ? VisibilityState.staffOnly : VisibilityState.live,
+                            has_explicit_staff_lock: isStaffOnly? true : false,
+                            visibility_state: newVisibilityState,
                             release_date: "Jul 02, 2000 at 14:20 UTC"
                         }));
                     };
 
                     verifyStaffOnly = function(isStaffOnly) {
                         if (isStaffOnly) {
-                            expect(containerPage.$('.action-staff-lock i')).toHaveClass('icon-check');
-                            expect(containerPage.$('.wrapper-visibility .copy').text()).toBe('Staff Only');
+                            expect(containerPage.$('.wrapper-visibility .copy').text()).toContain('Staff Only');
                             expect(containerPage.$(bitPublishingCss)).toHaveClass(staffOnlyClass);
-                            expect(containerPage.$(bitPublishingCss)).toHaveClass(scheduledClass);
+                        } else {
+                            expect(containerPage.$('.wrapper-visibility .copy').text().trim()).toBe('Staff and Students');
+                            expect(containerPage.$(bitPublishingCss)).not.toHaveClass(staffOnlyClass);
+                        }
+                    };
+
+                    verifyExplicitStaffOnly = function(isStaffOnly) {
+                        if (isStaffOnly) {
+                            expect(containerPage.$('.action-staff-lock i')).toHaveClass('icon-check');
                         } else {
                             expect(containerPage.$('.action-staff-lock i')).toHaveClass('icon-check-empty');
-                            expect(containerPage.$('.wrapper-visibility .copy').text()).toBe('Staff and Students');
-                            expect(containerPage.$(bitPublishingCss)).not.toHaveClass(staffOnlyClass);
+                        }
+                    };
+
+                    verifyImplicitStaffOnly = function(isStaffOnly) {
+                        if (isStaffOnly) {
+                            expect(containerPage.$('.wrapper-visibility .inherited-from')).toExist();
+                        } else {
+                            expect(containerPage.$('.wrapper-visibility .inherited-from')).not.toExist();
                         }
                     };
 
                     it("is initially shown to all", function() {
                         renderContainerPage(this, mockContainerXBlockHtml);
+                        verifyExplicitStaffOnly(false);
                         verifyStaffOnly(false);
                     });
 
@@ -444,23 +469,62 @@ define(["jquery", "underscore", "underscore.string", "js/spec_helpers/create_sin
                             published: true,
                             has_changes: true
                         });
-                        expect(containerPage.$(visibilityTitleCss).text()).toContain('Will Be Visible To')
+                        expect(containerPage.$(visibilityTitleCss).text()).toContain('Will Be Visible To');
                     });
 
-                    it("can be set to staff only", function() {
+                    it("can be explicitly set to staff only", function() {
                         renderContainerPage(this, mockContainerXBlockHtml);
                         requestStaffOnly(true);
+                        verifyExplicitStaffOnly(true);
+                        verifyImplicitStaffOnly(false);
                         verifyStaffOnly(true);
                     });
 
-                    it("can remove staff only setting", function() {
+                    it("can be implicitly set to staff only", function() {
+                        renderContainerPage(this, mockContainerXBlockHtml, {
+                            visibility_state: VisibilityState.staffOnly,
+                            staff_lock_from: "Section Foo"
+                        });
+                        verifyImplicitStaffOnly(true);
+                        verifyExplicitStaffOnly(false);
+                        verifyStaffOnly(true);
+                    });
+
+                    it("can be explicitly and implicitly set to staff only", function() {
+                        renderContainerPage(this, mockContainerXBlockHtml, {
+                            visibility_state: VisibilityState.staffOnly,
+                            staff_lock_from: "Section Foo"
+                        });
+                        requestStaffOnly(true);
+                        // explicit staff lock overrides the display of implicit staff lock
+                        verifyImplicitStaffOnly(false);
+                        verifyExplicitStaffOnly(true);
+                        verifyStaffOnly(true);
+                    });
+
+                    it("can remove explicit staff only setting without having implicit staff only", function() {
                         promptSpy = edit_helpers.createPromptSpy();
                         renderContainerPage(this, mockContainerXBlockHtml, {
                             visibility_state: VisibilityState.staffOnly,
-                            release_date: "Jul 02, 2000 at 14:20 UTC"
+                            has_explicit_staff_lock: true
                         });
                         requestStaffOnly(false);
+                        verifyExplicitStaffOnly(false);
+                        verifyImplicitStaffOnly(false);
                         verifyStaffOnly(false);
+                    });
+
+                    it("can remove explicit staff only setting while having implicit staff only", function() {
+                        promptSpy = edit_helpers.createPromptSpy();
+                        renderContainerPage(this, mockContainerXBlockHtml, {
+                            visibility_state: VisibilityState.staffOnly,
+                            staff_lock_from: "Section Foo",
+                            has_explicit_staff_lock: true
+                        });
+                        requestStaffOnly(false, true);
+                        verifyExplicitStaffOnly(false);
+                        verifyImplicitStaffOnly(true);
+                        verifyStaffOnly(true);
                     });
 
                     it("does not refresh if removing staff only is canceled", function() {
@@ -468,12 +532,13 @@ define(["jquery", "underscore", "underscore.string", "js/spec_helpers/create_sin
                         promptSpy = edit_helpers.createPromptSpy();
                         renderContainerPage(this, mockContainerXBlockHtml, {
                             visibility_state: VisibilityState.staffOnly,
-                            release_date: "Jul 02, 2000 at 14:20 UTC"
+                            has_explicit_staff_lock: true
                         });
                         requestCount = requests.length;
                         containerPage.$('.action-staff-lock').click();
                         edit_helpers.confirmPrompt(promptSpy, true);    // Click 'No' to cancel
                         expect(requests.length).toBe(requestCount);
+                        verifyExplicitStaffOnly(true);
                         verifyStaffOnly(true);
                     });
 
@@ -484,6 +549,7 @@ define(["jquery", "underscore", "underscore.string", "js/spec_helpers/create_sin
                         requestCount = requests.length;
                         create_sinon.respondWithError(requests);
                         expect(requests.length).toBe(requestCount);
+                        verifyExplicitStaffOnly(false);
                         verifyStaffOnly(false);
                     });
                 });

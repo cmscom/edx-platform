@@ -124,6 +124,19 @@ class ContainerPage(PageObject):
         warning_text = warnings.first.text[0]
         return warning_text == "Caution: The last published version of this unit is live. By publishing changes you will change the student experience."
 
+    def shows_inherited_staff_lock(self, parent_type=None, parent_name=None):
+        """
+        Returns True if the unit inherits staff lock from a section or subsection.
+
+        :parent_type: type of the parent ("Section" or "Subsection") which sets the unit's staff lock
+        :parent_name: display name of the parent which sets the unit's staff lock
+        """
+        visibility_message = self.q(css='.bit-publishing .wrapper-visibility .copy').text[0]
+        if parent_name and parent_type:
+            return 'with {type} "{name}"'.format(type=parent_type, name=parent_name) in visibility_message
+        else:
+            return 'with Section' in visibility_message or 'with Subsection' in visibility_message
+
     @property
     def publish_action(self):
         """
@@ -144,7 +157,7 @@ class ContainerPage(PageObject):
         """ Returns True if staff lock is currently enabled, False otherwise """
         return 'icon-check' in self.q(css='a.action-staff-lock>i').attrs('class')
 
-    def toggle_staff_lock(self):
+    def toggle_staff_lock(self, inherits_staff_lock=False):
         """
         Toggles "hide from students" which enables or disables a staff-only lock.
 
@@ -155,7 +168,8 @@ class ContainerPage(PageObject):
             self.q(css='a.action-staff-lock').first.click()
         else:
             click_css(self, 'a.action-staff-lock', 0, require_notification=False)
-            confirm_prompt(self)
+            if not inherits_staff_lock:
+                confirm_prompt(self)
         self.wait_for_ajax()
         return not was_locked_initially
 

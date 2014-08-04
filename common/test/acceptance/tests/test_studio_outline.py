@@ -11,6 +11,7 @@ from bok_choy.promise import EmptyPromise
 from ..pages.studio.overview import CourseOutlinePage, ContainerPage, ExpandCollapseLinkState
 from ..pages.studio.utils import add_discussion
 from ..pages.lms.courseware import CoursewarePage
+from ..pages.lms.staff_view import StaffPage
 from ..fixtures.course import XBlockFixtureDesc
 
 from .base_studio_test import StudioCourseTest
@@ -119,7 +120,9 @@ class WarningMessagesTest(CourseOutlineTest):
         return XBlockFixtureDesc('chapter', name).add_children(
             subsection if unit_state.publish_state == self.PublishState.NEVER_PUBLISHED
             else subsection.add_children(
-                XBlockFixtureDesc('vertical', name, metadata={'visible_to_staff_only': unit_state.is_locked})
+                XBlockFixtureDesc('vertical', name, metadata={
+                    'visible_to_staff_only': True if unit_state.is_locked else None
+                })
             )
         )
 
@@ -401,6 +404,260 @@ class EditingSectionsTest(CourseOutlineTest):
         release_text = 'Released: Jul 20, 1969'
         self.assertIn(release_text, self.course_outline_page.section_at(0).release_date)
         self.assertIn(release_text, self.course_outline_page.section_at(0).subsection_at(0).release_date)
+
+
+@attr('shard_2')
+class StaffLockTest(CourseOutlineTest):
+    """
+    Feature: Sections, subsections, and units can be locked and unlocked from the course outline.
+    """
+
+    __test__ = True
+
+    def populate_course_fixture(self, course_fixture):
+        """ Create a course with one section, two subsections, and four units """
+        course_fixture.add_children(
+            XBlockFixtureDesc('chapter', '1').add_children(
+                XBlockFixtureDesc('sequential', '1.1').add_children(
+                    XBlockFixtureDesc('vertical', '1.1.1'),
+                    XBlockFixtureDesc('vertical', '1.1.2')
+                ),
+                XBlockFixtureDesc('sequential', '1.2').add_children(
+                    XBlockFixtureDesc('vertical', '1.2.1'),
+                    XBlockFixtureDesc('vertical', '1.2.2')
+                )
+            )
+        )
+
+    def test_units_can_be_locked(self):
+        """
+        Scenario: Units can be locked and unlocked from the course outline page
+            Given I have a course with a unit
+            When I click on the configuration icon
+            And I enable explicit staff locking
+            And I click save
+            Then the unit shows a staff lock warning
+            And when I click on the configuration icon
+            And I disable explicit staff locking
+            And I click save
+            Then the unit does not show a staff lock warning
+        """
+        self.course_outline_page.visit()
+        self.course_outline_page.expand_all_subsections()
+        unit = self.course_outline_page.section_at(0).subsection_at(0).unit_at(0)
+        self.assertFalse(unit.has_staff_lock_warning)
+        unit.set_staff_lock(True)
+        self.assertTrue(unit.has_staff_lock_warning)
+        unit.set_staff_lock(False)
+        self.assertFalse(unit.has_staff_lock_warning)
+
+    def test_subsections_can_be_locked(self):
+        """
+        Scenario: Subsections can be locked and unlocked from the course outline page
+            Given I have a course with a subsection
+            When I click on the subsection's configuration icon
+            And I enable explicit staff locking
+            And I click save
+            Then the subsection shows a staff lock warning
+            And when I click on the subsection's configuration icon
+            And I disable explicit staff locking
+            And I click save
+            Then the the subsection does not show a staff lock warning
+        """
+        self.course_outline_page.visit()
+        subsection = self.course_outline_page.section_at(0).subsection_at(0)
+        self.assertFalse(subsection.has_staff_lock_warning)
+        subsection.set_staff_lock(True)
+        self.assertTrue(subsection.has_staff_lock_warning)
+        subsection.set_staff_lock(False)
+        self.assertFalse(subsection.has_staff_lock_warning)
+
+    def test_sections_can_be_locked(self):
+        """
+        Scenario: Sections can be locked and unlocked from the course outline page
+            Given I have a course with a section
+            When I click on the section's configuration icon
+            And I enable explicit staff locking
+            And I click save
+            Then the section shows a staff lock warning
+            And when I click on the section's configuration icon
+            And I disable explicit staff locking
+            And I click save
+            Then the section does not show a staff lock warning
+        """
+        self.course_outline_page.visit()
+        section = self.course_outline_page.section_at(0)
+        self.assertFalse(section.has_staff_lock_warning)
+        section.set_staff_lock(True)
+        self.assertTrue(section.has_staff_lock_warning)
+        section.set_staff_lock(False)
+        self.assertFalse(section.has_staff_lock_warning)
+
+    def test_explicit_staff_lock_remains_after_unlocking_section(self):
+        """
+        Scenario: An explicitly locked unit is still locked after removing an inherited lock from a section
+            Given I have a course with sections, subsections, and units
+            And I have enabled explicit staff lock on a section and one of its units
+            When I click on the section's configuration icon
+            And I disable explicit staff locking
+            And I click save
+            Then the unit still shows a staff lock warning
+        """
+        self.course_outline_page.visit()
+        self.course_outline_page.expand_all_subsections()
+        section = self.course_outline_page.section_at(0)
+        unit = section.subsection_at(0).unit_at(0)
+        unit.set_staff_lock(True)
+        section.set_staff_lock(True)
+        self.assertTrue(section.has_staff_lock_warning)
+        self.assertTrue(unit.has_staff_lock_warning)
+        section.set_staff_lock(False)
+        self.assertFalse(section.has_staff_lock_warning)
+        self.assertTrue(unit.has_staff_lock_warning)
+
+    def test_explicit_staff_lock_remains_after_unlocking_subsection(self):
+        """
+        Scenario: An explicitly locked unit is still locked after removing an inherited lock from a subsection
+            Given I have a course with sections, subsections, and units
+            And I have enabled explicit staff lock on a subsection and one of its units
+            When I click on the subsection's configuration icon
+            And I disable explicit staff locking
+            And I click save
+            Then the unit still shows a staff lock warning
+        """
+        self.course_outline_page.visit()
+        self.course_outline_page.expand_all_subsections()
+        subsection = self.course_outline_page.section_at(0).subsection_at(0)
+        unit = subsection.unit_at(0)
+        subsection.set_staff_lock(True)
+        unit.set_staff_lock(True)
+        self.assertTrue(subsection.has_staff_lock_warning)
+        self.assertTrue(unit.has_staff_lock_warning)
+        subsection.set_staff_lock(False)
+        self.assertFalse(subsection.has_staff_lock_warning)
+        self.assertTrue(unit.has_staff_lock_warning)
+
+    def test_section_displays_lock_when_all_subsections_locked(self):
+        """
+        Scenario: All subsections in section are explicitly locked, section should display staff only warning
+            Given I have a course one section and two subsections
+            When I enable explicit staff lock on all the subsections
+            Then the section shows a staff lock warning
+        """
+        self.course_outline_page.visit()
+        section = self.course_outline_page.section_at(0)
+        section.subsection_at(0).set_staff_lock(True)
+        section.subsection_at(1).set_staff_lock(True)
+        self.assertTrue(section.has_staff_lock_warning)
+
+    def test_section_displays_lock_when_all_units_locked(self):
+        """
+        Scenario: All units in a section are explicitly locked, section should display staff only warning
+            Given I have a course with one section, two subsections, and four units
+            When I enable explicit staff lock on all the units
+            Then the section shows a staff lock warning
+        """
+        self.course_outline_page.visit()
+        self.course_outline_page.expand_all_subsections()
+        section = self.course_outline_page.section_at(0)
+        section.subsection_at(0).unit_at(0).set_staff_lock(True)
+        section.subsection_at(0).unit_at(1).set_staff_lock(True)
+        section.subsection_at(1).unit_at(0).set_staff_lock(True)
+        section.subsection_at(1).unit_at(1).set_staff_lock(True)
+        self.assertTrue(section.has_staff_lock_warning)
+
+    def test_subsection_displays_lock_when_all_units_locked(self):
+        """
+        Scenario: All units in subsection are explicitly locked, subsection should display staff only warning
+            Given I have a course with one subsection and two units
+            When I enable explicit staff lock on all the units
+            Then the subsection shows a staff lock warning
+        """
+        self.course_outline_page.visit()
+        self.course_outline_page.expand_all_subsections()
+        subsection = self.course_outline_page.section_at(0).subsection_at(0)
+        subsection.unit_at(0).set_staff_lock(True)
+        subsection.unit_at(1).set_staff_lock(True)
+        self.assertTrue(subsection.has_staff_lock_warning)
+
+    def test_section_does_not_display_lock_when_some_subsections_locked(self):
+        """
+        Scenario: Only some subsections in section are explicitly locked, section should NOT display staff only warning
+            Given I have a course with one section and two subsections
+            When I enable explicit staff lock on one subsection
+            Then the section does not show a staff lock warning
+        """
+        self.course_outline_page.visit()
+        section = self.course_outline_page.section_at(0)
+        section.subsection_at(0).set_staff_lock(True)
+        self.assertFalse(section.has_staff_lock_warning)
+
+    def test_section_does_not_display_lock_when_some_units_locked(self):
+        """
+        Scenario: Only some units in section are explicitly locked, section should NOT display staff only warning
+            Given I have a course with one section, two subsections, and four units
+            When I enable explicit staff lock on three units
+            Then the section does not show a staff lock warning
+        """
+        self.course_outline_page.visit()
+        self.course_outline_page.expand_all_subsections()
+        section = self.course_outline_page.section_at(0)
+        section.subsection_at(0).unit_at(0).set_staff_lock(True)
+        section.subsection_at(0).unit_at(1).set_staff_lock(True)
+        section.subsection_at(1).unit_at(1).set_staff_lock(True)
+        self.assertFalse(section.has_staff_lock_warning)
+
+    def test_subsection_does_not_display_lock_when_some_units_locked(self):
+        """
+        Scenario: Only some units in subsection are explicitly locked, subsection should NOT display staff only warning
+            Given I have a course with one subsection and two units
+            When I enable explicit staff lock on one unit
+            Then the subsection does not show a staff lock warning
+        """
+        self.course_outline_page.visit()
+        self.course_outline_page.expand_all_subsections()
+        subsection = self.course_outline_page.section_at(0).subsection_at(0)
+        subsection.unit_at(0).set_staff_lock(True)
+        self.assertFalse(subsection.has_staff_lock_warning)
+
+    def test_locked_sections_do_not_appear_in_lms(self):
+        """
+        Scenario: A locked section is not visible to students in the LMS
+            Given I have a course with two sections
+            When I enable explicit staff lock on one section
+            And I click the View Live button to switch to staff view
+            Then I see two sections in the sidebar
+            And when I click to toggle to student view
+            Then I see one section in the sidebar
+        """
+        self.course_outline_page.visit()
+        self.course_outline_page.add_section_from_top_button()
+        self.course_outline_page.section_at(1).set_staff_lock(True)
+        self.course_outline_page.view_live()
+        courseware = CoursewarePage(self.browser, self.course_id)
+        courseware.wait_for_page()
+        self.assertEqual(courseware.num_sections, 2)
+        StaffPage(self.browser).toggle_staff_view()
+        self.assertEqual(courseware.num_sections, 1)
+
+    def test_locked_subsections_do_not_appear_in_lms(self):
+        """
+        Scenario: A locked subsection is not visible to students in the LMS
+            Given I have a course with two subsections
+            When I enable explicit staff lock on one subsection
+            And I click the View Live button to switch to staff view
+            Then I see two subsections in the sidebar
+            And when I click to toggle to student view
+            Then I see one section in the sidebar
+        """
+        self.course_outline_page.visit()
+        self.course_outline_page.section_at(0).subsection_at(1).set_staff_lock(True)
+        self.course_outline_page.view_live()
+        courseware = CoursewarePage(self.browser, self.course_id)
+        courseware.wait_for_page()
+        self.assertEqual(courseware.num_subsections, 2)
+        StaffPage(self.browser).toggle_staff_view()
+        self.assertEqual(courseware.num_subsections, 1)
 
 
 @attr('shard_2')
