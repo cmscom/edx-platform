@@ -298,6 +298,9 @@ class SplitTestModule(SplitTestFields, XModule, StudioEditableModule):
         html = ""
         for active_child_descriptor in children:
             active_child = self.system.get_module(active_child_descriptor)
+            if active_child.category == 'vertical':
+                active_child.display_name = self.get_display_name_for_vertical(active_child)
+                active_child.save()
             rendered_child = active_child.render(StudioEditableModule.get_preview_view_name(active_child), context)
             fragment.add_frag_resources(rendered_child)
             html = html + rendered_child.content
@@ -342,6 +345,18 @@ class SplitTestModule(SplitTestFields, XModule, StudioEditableModule):
         progresses = [child.get_progress() for child in children]
         progress = reduce(Progress.add_counts, progresses, None)
         return progress
+
+    def get_display_name_for_vertical(self, vertical):
+        """
+        Return group name corresponding to `vertical`.
+        """
+        user_partition = self.descriptor.get_selected_partition()
+
+        for group in getattr(user_partition, 'groups', []):
+            group_id = unicode(group.id)
+            child_location = self.group_id_to_child.get(group_id, None)
+            if child_location == vertical.location:
+                return group.name
 
 
 @XBlock.needs('user_tags')  # pylint: disable=abstract-method
@@ -607,16 +622,3 @@ class SplitTestDescriptor(SplitTestFields, SequenceDescriptor, StudioEditableDes
         )
         self.children.append(dest_usage_key)  # pylint: disable=no-member
         self.group_id_to_child[unicode(group.id)] = dest_usage_key
-
-
-    def get_display_name_for_vertical(self, vertical):
-        user_partition = self.get_selected_partition()
-
-        modulestore = self.system.modulestore
-
-        for group in getattr(user_partition, 'groups', []):
-            group_id = unicode(group.id)
-            child_location = self.group_id_to_child.get(group_id, None)
-
-            if child_location == vertical.location and vertical.display_name != group.name:
-                return group.name

@@ -150,8 +150,8 @@ class TestVertSplitTestVert(SplitTestBase):
         ['Group 1 Sees This Video', 'Group 1 Sees This HTML'],
     ]
     HIDDEN_CONTENT = [
-        ['Condition 0 vertical'],
-        ['Condition 1 vertical'],
+        ['alpha'],
+        ['beta'],
     ]
 
     # Data is html encoded, because it's inactive inside the
@@ -222,8 +222,8 @@ class TestSplitTestVert(SplitTestBase):
         ['Group 1 Sees This Video', 'Group 1 Sees This HTML'],
     ]
     HIDDEN_CONTENT = [
-        ['Condition 0 vertical'],
-        ['Condition 1 vertical'],
+        ['alpha'],
+        ['beta'],
     ]
 
     # Data is html encoded, because it's inactive inside the
