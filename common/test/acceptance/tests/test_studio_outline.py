@@ -11,6 +11,7 @@ from bok_choy.promise import EmptyPromise
 from ..pages.studio.overview import CourseOutlinePage, ContainerPage, ExpandCollapseLinkState
 from ..pages.studio.utils import add_discussion
 from ..pages.lms.courseware import CoursewarePage
+from ..pages.lms.course_nav import CourseNavPage
 from ..fixtures.course import XBlockFixtureDesc
 
 from .base_studio_test import StudioCourseTest
@@ -986,9 +987,9 @@ class UnitNavigationTest(CourseOutlineTest):
         self.assertTrue(unit.is_browser_on_page)
 
 
-class PublishUnitTest(CourseOutlineTest):
+class PublishSectionTest(CourseOutlineTest):
     """
-    Feature: Publish the unit.
+    Feature: Publish sections.
     """
 
     __test__ = True
@@ -998,39 +999,107 @@ class PublishUnitTest(CourseOutlineTest):
         Sets up a course structure with a unit and a single HTML child.
         """
         self.courseware = CoursewarePage(self.browser, self.course_id)
+        self.course_nav = CourseNavPage(self.browser)
         course_fixture.add_children(
             XBlockFixtureDesc('chapter', SECTION_NAME).add_children(
                 XBlockFixtureDesc('sequential', SUBSECTION_NAME).add_children(
-                    XBlockFixtureDesc('vertical', UNIT_NAME).add_children()
-                )
-            )
+                    XBlockFixtureDesc('vertical', UNIT_NAME),
+                    XBlockFixtureDesc('vertical', 'Test Unit 2'),
+                ),
+                XBlockFixtureDesc('sequential', 'Test Subsection 2').add_children(
+                    XBlockFixtureDesc('vertical', 'Test Unit 3'),
+                ),
+            ),
         )
 
-    def test_publishing(self):
+    def test_unit_publishing(self):
         """
-        Scenario: The publishing from the course outline shows published content in LMS
-            Given I have an unpublished unit
+        Scenario: Can publish a unit and see published content in LMS
+            Given I have a section with 2 subsections and 3 unpublished units
             When I go to the course outline
-            Then I see publish button for the unit
-            When I publish the unit
-            Then I see that publish button disappears
+            Then I see publish button for the first unit, subsection, section
+            When I publish the first unit
+            Then I see that publish button for the first unit disappears
+            And I see publish buttons for subsection, section
             And I see the changed content in LMS
         """
-        vertical = self.course_fixture.get_nested_xblocks(category="vertical")[0]
-        self.course_fixture.create_xblock(
-            vertical.locator,
-            XBlockFixtureDesc('html', 'Test HTML Component'),
-        )
-
+        self._add_unpublished_content()
         self.course_outline_page.visit()
-
-        unit = self.course_outline_page.section(SECTION_NAME).subsection(SUBSECTION_NAME).toggle_expand().unit(UNIT_NAME)
-        # Should contain publish button
+        section, subsection, unit = self._get_items()
         self.assertTrue(unit.publish_action)
+        self.assertTrue(subsection.publish_action)
+        self.assertTrue(section.publish_action)
         unit.publish()
-        # Does not contain publish button
+        self.assertFalse(unit.publish_action)
+        self.assertTrue(subsection.publish_action)
+        self.assertTrue(section.publish_action)
+        self.courseware.visit()
+        self.assertEqual(1, self.courseware.num_xblock_components)
+
+    def test_subsection_publishing(self):
+        """
+        Scenario: Can publish a subsection and see published content in LMS
+            Given I have a section with 2 subsections and 3 unpublished units
+            When I go to the course outline
+            Then I see publish button for the unit, subsection, section
+            When I publish the first subsection
+            Then I see that publish button for the first subsection disappears
+            And I see that publish buttons disappear for the child units of the subsection
+            And I see publish button for section
+            And I see the changed content in LMS
+        """
+        self._add_unpublished_content()
+        self.course_outline_page.visit()
+        section, subsection, unit = self._get_items()
+        self.assertTrue(unit.publish_action)
+        self.assertTrue(subsection.publish_action)
+        self.assertTrue(section.publish_action)
+        self.course_outline_page.section(SECTION_NAME).subsection(SUBSECTION_NAME).publish()
+        self.assertFalse(unit.publish_action)
+        self.assertFalse(subsection.publish_action)
+        self.assertTrue(section.publish_action)
+        self.courseware.visit()
+        self.assertEqual(1, self.courseware.num_xblock_components)
+        self.course_nav.go_to_sequential_position(2)
+        self.assertEqual(1, self.courseware.num_xblock_components)
+
+    def test_section_publishing(self):
+        """
+        Scenario: Can publish a section and see published content in LMS
+            Given I have a section with 2 subsections and 3 unpublished units
+            When I go to the course outline
+            Then I see publish button for the unit, subsection, section
+            When I publish the section
+            Then I see that publish buttons disappears
+            And I see the changed content in LMS
+        """
+        self._add_unpublished_content()
+        self.course_outline_page.visit()
+        section, subsection, unit = self._get_items()
+        self.assertTrue(subsection.publish_action)
+        self.assertTrue(section.publish_action)
+        self.assertTrue(unit.publish_action)
+        self.course_outline_page.section(SECTION_NAME).publish()
+        self.assertFalse(subsection.publish_action)
+        self.assertFalse(section.publish_action)
         self.assertFalse(unit.publish_action)
         self.courseware.visit()
-        # Verify that the unit was published
         self.assertEqual(1, self.courseware.num_xblock_components)
-        self.assertEqual('html', self.courseware.xblock_component_type(0))
+        self.course_nav.go_to_sequential_position(2)
+        self.assertEqual(1, self.courseware.num_xblock_components)
+        self.course_nav.go_to_section(SECTION_NAME, 'Test Subsection 2')
+        self.assertEqual(1, self.courseware.num_xblock_components)
+
+    def _add_unpublished_content(self):
+        for index in xrange(3):
+            self.course_fixture.create_xblock(
+                self.course_fixture.get_nested_xblocks(category="vertical")[index].locator,
+                XBlockFixtureDesc('html', 'Unpublished HTML Component ' + index),
+            )
+
+    def _get_items(self, visible=True):
+        section = self.course_outline_page.section(SECTION_NAME)
+        subsection = section.subsection(SUBSECTION_NAME)
+        unit = subsection.toggle_expand().unit(UNIT_NAME)
+
+        return (section, subsection, unit)

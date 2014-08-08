@@ -131,6 +131,22 @@ class CourseOutlineItem(object):
         element = self.q(css=self._bounded_selector(".status-grading-value"))
         return element.first.text[0] if element.present else None
 
+    def publish(self):
+        """
+        Publish the unit.
+        """
+        click_css(self, self._bounded_selector('.action-publish'), require_notification=False)
+        modal = CourseOutlineModal(self)
+        EmptyPromise(lambda: modal.is_shown(), 'Modal is shown.')
+        modal.publish()
+
+    @property
+    def publish_action(self):
+        """
+        Returns the link for publishing a unit.
+        """
+        return self.q(css=self._bounded_selector('.action-publish')).first
+
 
 class CourseOutlineContainer(CourseOutlineItem):
     """
@@ -253,22 +269,6 @@ class CourseOutlineUnit(CourseOutlineChild):
 
     def is_browser_on_page(self):
         return self.q(css=self.BODY_SELECTOR).present
-
-    def publish(self):
-        """
-        Publish the unit.
-        """
-        click_css(self, self._bounded_selector('.action-publish'), require_notification=False)
-        modal = CourseOutlineModal(self)
-        EmptyPromise(lambda: modal.is_shown(), 'Modal is shown.')
-        modal.publish()
-
-    @property
-    def publish_action(self):
-        """
-        Returns the link for publishing a unit.
-        """
-        return self.q(css=self._bounded_selector('.action-publish')).first
 
 
 class CourseOutlineSubsection(CourseOutlineChild, CourseOutlineContainer):
