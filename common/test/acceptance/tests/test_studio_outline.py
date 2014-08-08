@@ -999,9 +999,9 @@ class PublishUnitTest(CourseOutlineTest):
         """
         self.courseware = CoursewarePage(self.browser, self.course_id)
         course_fixture.add_children(
-            XBlockFixtureDesc('chapter', 'Test Section').add_children(
-                XBlockFixtureDesc('sequential', 'Test Subsection').add_children(
-                    XBlockFixtureDesc('vertical', 'Test Unit').add_children()
+            XBlockFixtureDesc('chapter', SECTION_NAME).add_children(
+                XBlockFixtureDesc('sequential', SUBSECTION_NAME).add_children(
+                    XBlockFixtureDesc('vertical', UNIT_NAME).add_children()
                 )
             )
         )
@@ -1023,8 +1023,8 @@ class PublishUnitTest(CourseOutlineTest):
         )
 
         self.course_outline_page.visit()
-        self.course_outline_page.section(SECTION_NAME).subsection(SUBSECTION_NAME).toggle_expand()
-        unit = self.course_outline_page.section(SECTION_NAME).subsection(SUBSECTION_NAME).unit_at(0)
+
+        unit = self.course_outline_page.section(SECTION_NAME).subsection(SUBSECTION_NAME).toggle_expand().unit(UNIT_NAME)
         # Should contain publish button
         self.assertTrue(unit.publish_action)
         unit.publish()

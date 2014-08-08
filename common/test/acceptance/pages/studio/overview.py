@@ -261,7 +261,7 @@ class CourseOutlineUnit(CourseOutlineChild):
         click_css(self, self._bounded_selector('.action-publish'), require_notification=False)
         modal = CourseOutlineModal(self)
         EmptyPromise(lambda: modal.is_shown(), 'Modal is shown.')
-        modal.save()
+        modal.publish()
 
     @property
     def publish_action(self):
@@ -470,7 +470,7 @@ class CourseOutlinePage(CoursePage, CourseOutlineContainer):
 
 
 class CourseOutlineModal(object):
-    MODAL_SELECTOR = ".course-outline-modal"
+    MODAL_SELECTOR = ".wrapper-modal-window"
 
     def __init__(self, page):
         self.page = page
@@ -492,6 +492,10 @@ class CourseOutlineModal(object):
 
     def save(self):
         self.click(".action-save")
+        self.page.wait_for_ajax()
+
+    def publish(self):
+        self.click(".action-publish")
         self.page.wait_for_ajax()
 
     def cancel(self):
