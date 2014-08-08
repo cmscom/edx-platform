@@ -121,7 +121,10 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         },
 
         getIntroductionMessage: function () {
-            return gettext('Publish all unpublished changes for this unit?');
+            return interpolate(
+                gettext('Publish all unpublished changes for this %(item)s?'),
+                {item: this.options.xblockType}, true
+                );
         },
 
         addActionButtons: function() {

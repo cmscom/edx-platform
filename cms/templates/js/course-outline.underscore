@@ -63,7 +63,7 @@ if (xblockInfo.get('graded')) {
 
         <div class="<%= xblockType %>-header-actions">
             <ul class="actions-list">
-                <% if (xblockInfo.isVertical() && (!published || hasChanges)) { %>
+                <% if (!published || hasChanges) { %>
                     <li class="action-item action-publish">
                         <a href="#" data-tooltip="<%= gettext('Publish') %>" class="publish-button action-button">
                             <i class="icon icon-upload-alt"></i>
