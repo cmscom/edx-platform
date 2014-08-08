@@ -1,46 +1,40 @@
 <% if (!xblockInfo.isVertical()) { %>
-    <% if (xblockInfo.isChapter()) { %>
-        <div class="modal-section bulkpublish-included">
-            <div class="modal-section-content">
-                <div class="outline outline-simple outline-bulkpublish">
-                    <ol class="list-subsections">
-                        <% _.each(xblockInfo.get('child_info').children, function(subsection) { %>
-                        <% if (!subsection.get('published') || subsection.get('has_changes'))  { %>
-                        <li class="outline-item outline-subsection">
-                            <h4 class="subsection-title item-title"><%= subsection.get('display_name') %></h4>
-                            <div class="subsection-content">
-                                <ol class="list-units">
-                                    <% _.each(xblockInfo.get('child_info').children, function(unit) { %>
-                                        <% if (!unit.get('published') || unit.get('has_changes'))  { %>
-                                            <li class="outline-item outline-unit">
-                                                <span class="unit-title item-title"><%= unit.get('display_name') %></span>
-                                            </li>
-                                        <% } %>
-                                    <% }); %>
-                                </ol>
-                            </div>
-                        </li>
-                        <% } %>
-                        <% }); %>
-                    </ol>
-                </div>
+  <div class="modal-section bulkpublish-included">
+  <div class="modal-section-content">
+  <div class="outline outline-simple outline-bulkpublish">
+  <% if (xblockInfo.isChapter()) { %>
+    <ol class="list-subsections">
+      <% _.each(xblockInfo.get('child_info').children, function(subsection) { %>
+        <% if (!subsection.get('published') || subsection.get('has_changes'))  { %>
+          <li class="outline-item outline-subsection">
+            <h4 class="subsection-title item-title"><%= subsection.get('display_name') %></h4>
+            <div class="subsection-content">
+              <ol class="list-units">
+                <% _.each(xblockInfo.get('child_info').children, function(unit) { %>
+                  <% if (!unit.get('published') || unit.get('has_changes'))  { %>
+                    <li class="outline-item outline-unit">
+                      <span class="unit-title item-title"><%= unit.get('display_name') %></span>
+                    </li>
+                  <% } %>
+                <% }); %>
+              </ol>
             </div>
-        </div>
+          </li>
+        <% } %>
+      <% }); %>
+    </ol>
     <% } else { %>
-        <div class="modal-section bulkpublish-included">
-            <div class="modal-section-content">
-                <div class="outline outline-simple outline-bulkpublish">
-                    <ol class="list-units">
-                        <% _.each(xblockInfo.get('child_info').children, function(unit) { %>
-                            <% if (!unit.get('published') || unit.get('has_changes'))  { %>
-                                <li class="outline-item outline-unit">
-                                    <span class="unit-title item-title"><%= unit.get('display_name') %></span>
-                                </li>
-                            <% } %>
-                        <% }); %>
-                    </ol>
-                </div>
-            </div>
-        </div>
+      <ol class="list-units">
+        <% _.each(xblockInfo.get('child_info').children, function(unit) { %>
+          <% if (!unit.get('published') || unit.get('has_changes'))  { %>
+            <li class="outline-item outline-unit">
+              <span class="unit-title item-title"><%= unit.get('display_name') %></span>
+            </li>
+          <% } %>
+        <% }); %>
+      </ol>
     <% } %>
+  </div>
+  </div>
+  </div>
 <% } %>
