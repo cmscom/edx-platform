@@ -1097,7 +1097,7 @@ class PublishSectionTest(CourseOutlineTest):
                 XBlockFixtureDesc('html', 'Unpublished HTML Component ' + index),
             )
 
-    def _get_items(self, visible=True):
+    def _get_items(self):
         section = self.course_outline_page.section(SECTION_NAME)
         subsection = section.subsection(SUBSECTION_NAME)
         unit = subsection.toggle_expand().unit(UNIT_NAME)
