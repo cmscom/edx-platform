@@ -1094,7 +1094,7 @@ class PublishSectionTest(CourseOutlineTest):
         for index in xrange(3):
             self.course_fixture.create_xblock(
                 self.course_fixture.get_nested_xblocks(category="vertical")[index].locator,
-                XBlockFixtureDesc('html', 'Unpublished HTML Component ' + index),
+                XBlockFixtureDesc('html', 'Unpublished HTML Component ' + str(index)),
             )
 
     def _get_items(self):
