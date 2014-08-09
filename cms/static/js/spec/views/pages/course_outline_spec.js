@@ -5,14 +5,14 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
         describe("CourseOutlinePage", function() {
             var createCourseOutlinePage, displayNameInput, model, outlinePage, requests,
                 getItemsOfType, getItemHeaders, verifyItemsExpanded, expandItemsAndVerifyState, collapseItemsAndVerifyState,
-                createMockCourseJSON, createMockSectionJSON, createMockSubsectionJSON,
+                createMockCourseJSON, createMockSectionJSON, createMockSubsectionJSON, verifyPublishing,
                 mockCourseJSON, mockEmptyCourseJSON, mockSingleSectionCourseJSON, createMockVerticalJSON,
                 mockOutlinePage = readFixtures('mock/mock-course-outline-page.underscore');
 
-            createMockCourseJSON = function(id, displayName, children) {
-                return {
-                    id: id,
-                    display_name: displayName,
+            createMockCourseJSON = function(options, children) {
+                return $.extend(true, {}, {
+                    id: 'mock-course',
+                    display_name: 'Mock Course',
                     category: 'course',
                     studio_url: '/course/slashes:MockCourse',
                     is_container: true,
@@ -21,17 +21,17 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     edited_on: 'Jul 02, 2014 at 20:56 UTC',
                     edited_by: 'MockUser',
                     child_info: {
-                        display_name: 'Section',
                         category: 'chapter',
-                        children: children
+                        display_name: 'Section',
+                        children: []
                     }
-                };
+                }, options, {child_info: {children: children}});
             };
-            createMockSectionJSON = function(id, displayName, children) {
-                return {
-                    id: id,
+            createMockSectionJSON = function(options, children) {
+                return $.extend(true, {}, {
+                    id: 'mock-section',
+                    display_name: 'Mock Section',
                     category: 'chapter',
-                    display_name: displayName,
                     studio_url: '/course/slashes:MockCourse',
                     is_container: true,
                     has_changes: false,
@@ -41,14 +41,14 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     child_info: {
                         category: 'sequential',
                         display_name: 'Subsection',
-                        children: children
+                        children: []
                     }
-                };
+                }, options, {child_info: {children: children}});
             };
-            createMockSubsectionJSON = function(id, displayName, children) {
-                return {
-                    id: id,
-                    display_name: displayName,
+            createMockSubsectionJSON = function(options, children) {
+                return $.extend(true, {}, {
+                    id: 'mock-subsection',
+                    display_name: 'Mock Subsection',
                     category: 'sequential',
                     studio_url: '/course/slashes:MockCourse',
                     is_container: true,
@@ -60,9 +60,9 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     child_info: {
                         category: 'vertical',
                         display_name: 'Unit',
-                        children: children
+                        children: []
                     }
-                };
+                }, options, {child_info: {children: children}});
             };
             createMockVerticalJSON = function(options) {
                 return $.extend(true, {}, {
@@ -119,6 +119,70 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                 return outlinePage;
             };
 
+            verifyPublishing = function (type, getMockCourseJSON) {
+                var createCourseOutlinePageAndShowUnit, verifyPublishButton;
+
+                createCourseOutlinePageAndShowUnit = function (test, courseJSON, createOnly) {
+                    outlinePage = createCourseOutlinePage.apply(this, arguments);
+                    if (type === 'unit') {
+                        expandItemsAndVerifyState('subsection');
+                    }
+                };
+
+                verifyPublishButton = function (test, courseJSON, createOnly) {
+                    createCourseOutlinePageAndShowUnit.apply(this, arguments);
+                    expect(getItemHeaders(type).find('.publish-button')).toExist();
+                };
+
+                it('can be published', function() {
+                    var mockCourseJSON = getMockCourseJSON({
+                        has_changes: true
+                    });
+                    createCourseOutlinePageAndShowUnit(this, mockCourseJSON);
+                    getItemHeaders(type).find('.publish-button').click();
+                    $(".wrapper-modal-window .action-publish").click();
+                    create_sinon.expectJsonRequest(requests, 'POST', '/xblock/mock-' + type, {
+                        publish : 'make_public'
+                    });
+                    expect(requests[0].requestHeaders['X-HTTP-Method-Override']).toBe('PATCH');
+                    create_sinon.respondWithJson(requests, {});
+                    create_sinon.expectJsonRequest(requests, 'GET', '/xblock/outline/mock-section');
+                });
+
+                it('should show publish button if it is not published and not changed', function() {
+                    var mockCourseJSON = getMockCourseJSON({
+                        has_changes: false,
+                        published: false
+                    });
+                    verifyPublishButton(this, mockCourseJSON);
+                });
+
+                it('should show publish button if it is published and changed', function() {
+                    var mockCourseJSON = getMockCourseJSON({
+                        has_changes: true,
+                        published: true
+                    });
+                    verifyPublishButton(this, mockCourseJSON);
+                });
+
+                it('should show publish button if it is not published, but changed', function() {
+                    var mockCourseJSON = getMockCourseJSON({
+                        has_changes: true,
+                        published: false
+                    });
+                    verifyPublishButton(this, mockCourseJSON);
+                });
+
+                it('should hide publish button if it is not changed, but published', function() {
+                    var mockCourseJSON = getMockCourseJSON({
+                        has_changes: false,
+                        published: true
+                    });
+                    createCourseOutlinePageAndShowUnit(this, mockCourseJSON);
+                    expect(getItemHeaders(type).find('.publish-button')).not.toExist();
+                });
+            };
+
             beforeEach(function () {
                 view_helpers.installMockAnalytics();
                 view_helpers.installViewTemplates();
@@ -128,16 +192,16 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     'due-date-editor', 'grading-editor', 'publish-editor'
                 ]);
                 appendSetFixtures(mockOutlinePage);
-                mockCourseJSON = createMockCourseJSON('mock-course', 'Mock Course', [
-                    createMockSectionJSON('mock-section', 'Mock Section', [
-                        createMockSubsectionJSON('mock-subsection', 'Mock Subsection', [
+                mockCourseJSON = createMockCourseJSON({}, [
+                    createMockSectionJSON({}, [
+                        createMockSubsectionJSON({}, [
                             createMockVerticalJSON()
                         ])
                     ])
                 ]);
-                mockEmptyCourseJSON = createMockCourseJSON('mock-course', 'Mock Course', []);
-                mockSingleSectionCourseJSON = createMockCourseJSON('mock-course', 'Mock Course', [
-                    createMockSectionJSON('mock-section', 'Mock Section', [])
+                mockEmptyCourseJSON = createMockCourseJSON();
+                mockSingleSectionCourseJSON = createMockCourseJSON({}, [
+                    createMockSectionJSON()
                 ]);
             });
 
@@ -207,7 +271,7 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     // Expect the UI to just fetch the new section and repaint it
                     create_sinon.expectJsonRequest(requests, 'GET', '/xblock/outline/mock-section-2');
                     create_sinon.respondWithJson(requests,
-                        createMockSectionJSON('mock-section-2', 'Mock Section 2', []));
+                        createMockSectionJSON({id: 'mock-section-2', display_name: 'Mock Section 2'}));
                     sectionElements = getItemsOfType('section');
                     expect(sectionElements.length).toBe(2);
                     expect($(sectionElements[0]).data('locator')).toEqual('mock-section');
@@ -275,9 +339,9 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
 
                 it('can be deleted', function() {
                     var promptSpy = view_helpers.createPromptSpy(), requestCount;
-                    createCourseOutlinePage(this, createMockCourseJSON('mock-course', 'Mock Course', [
-                        createMockSectionJSON('mock-section', 'Mock Section', []),
-                        createMockSectionJSON('mock-section-2', 'Mock Section 2', [])
+                    createCourseOutlinePage(this, createMockCourseJSON({}, [
+                        createMockSectionJSON(),
+                        createMockSectionJSON({id: 'mock-section-2', display_name: 'Mock Section 2'})
                     ]));
                     getItemHeaders('section').find('.delete-button').first().click();
                     view_helpers.confirmPrompt(promptSpy);
@@ -379,24 +443,59 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
 
                     // This is the response for the change operation.
                     create_sinon.respondWithJson(requests, {});
-                    var mockResponseSectionJSON = $.extend(true, {},
-                        createMockSectionJSON('mock-section', 'Mock Section', [
-                            createMockSubsectionJSON('mock-subsection', 'Mock Subsection', [
+                    var mockResponseSectionJSON = createMockSectionJSON({
+                            release_date: 'Jan 02, 2015 at 00:00 UTC'
+                        }, [
+                            createMockSubsectionJSON({}, [
                                 createMockVerticalJSON({
                                     has_changes: true,
                                     published: false
                                 })
                             ])
-                        ]), {
-                            release_date: 'Jan 02, 2015 at 00:00 UTC'
-                        }
-                    );
+                        ]);
                     create_sinon.expectJsonRequest(requests, 'GET', '/xblock/outline/mock-section')
                     expect(requests.length).toBe(2);
                     // This is the response for the subsequent fetch operation for the section.
                     create_sinon.respondWithJson(requests, mockResponseSectionJSON);
 
                     expect($(".outline-section .status-release-value")).toContainText("Jan 02, 2015 at 00:00 UTC");
+                });
+
+                verifyPublishing('section', function (options) {
+                    return createMockCourseJSON({}, [
+                        createMockSectionJSON(options, [
+                            createMockSubsectionJSON({}, [
+                                createMockVerticalJSON()
+                            ])
+                        ])
+                    ]);
+                });
+
+                it('publish modal displays a list of unpublished subsections and units for the Section', function () {
+                    var mockCourseJSON = createMockCourseJSON({}, [
+                            createMockSectionJSON({has_changes: true}, [
+                                createMockSubsectionJSON({has_changes: true}, [
+                                    createMockVerticalJSON(),
+                                    createMockVerticalJSON({has_changes: true}),
+                                    createMockVerticalJSON({published: false})
+                                ]),
+                                createMockSubsectionJSON({has_changes: true}, [
+                                    createMockVerticalJSON({has_changes: true})
+                                ]),
+                                createMockSubsectionJSON({}, [createMockVerticalJSON])
+                            ]),
+                            createMockSectionJSON({has_changes: true}, [
+                                createMockSubsectionJSON({has_changes: true}, [
+                                    createMockVerticalJSON({has_changes: true}),
+                                ])
+                            ])
+                        ]), modalWindow;
+
+                    createCourseOutlinePage(this, mockCourseJSON, false);
+                    getItemHeaders('section').first().find('.publish-button').click();
+                    modalWindow = $('.wrapper-modal-window');
+                    expect(modalWindow.find('.outline-unit').length).toBe(3);
+                    expect(modalWindow.find('.outline-subsection').length).toBe(2);
                 });
             });
 
@@ -414,29 +513,23 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                 }
 
                 // Contains hard-coded dates because dates are presented in different formats.
-                var mockServerValuesJson = $.extend(true, {},
-                    createMockSectionJSON('mock-section', 'Mock Section', [
-                        createMockSubsectionJSON('mock-subsection', 'Mock Subsection', [
+                var mockServerValuesJson = createMockSectionJSON({
+                        release_date: 'Jan 01, 2970 at 05:00 UTC'
+                    }, [
+                        createMockSubsectionJSON({
+                            graded: true,
+                            due_date: 'Jul 10, 2014 at 00:00 UTC',
+                            release_date: 'Jul 09, 2014 at 00:00 UTC',
+                            start: "2014-07-09T00:00:00Z",
+                            format: "Lab",
+                            due: "2014-07-10T00:00:00Z",
+                        }, [
                             createMockVerticalJSON({
                                 has_changes: true,
                                 published: false
                             })
                         ])
-                    ]),
-                    {
-                        release_date: 'Jan 01, 2970 at 05:00 UTC',
-                        child_info: { //Section child_info
-                            children: [{ // Section children
-                                graded: true,
-                                due_date: 'Jul 10, 2014 at 00:00 UTC',
-                                release_date: 'Jul 09, 2014 at 00:00 UTC',
-                                start: "2014-07-09T00:00:00Z",
-                                format: "Lab",
-                                due: "2014-07-10T00:00:00Z"
-                            }]
-                        }
-                    }
-                );
+                    ]);
 
                 it('can be deleted', function() {
                     var promptSpy = view_helpers.createPromptSpy();
@@ -479,9 +572,12 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     create_sinon.respondWithJson(requests, { });
                     // This is the response for the subsequent fetch operation for the section.
                     create_sinon.respondWithJson(requests,
-                        createMockSectionJSON('mock-section', 'Mock Section', [
-                            createMockSubsectionJSON('mock-subsection', updatedDisplayName, [])
-                        ]));
+                        createMockSectionJSON({}, [
+                            createMockSubsectionJSON({
+                                display_name: updatedDisplayName
+                            })
+                        ])
+                    );
                     // Find the display name again in the refreshed DOM and verify it
                     displayNameWrapper = getItemHeaders('subsection').find('.wrapper-xblock-field');
                     view_helpers.verifyInlineEditChange(displayNameWrapper, updatedDisplayName);
@@ -562,44 +658,52 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     create_sinon.respondWithJson(requests, {});
                     // This is the response for the subsequent fetch operation.
                     create_sinon.respondWithJson(requests,
-                        createMockSectionJSON('mock-section', 'Mock Section', [
-                            createMockSubsectionJSON('mock-subsection', 'Mock Subsection', [])
-                        ])
+                        createMockSectionJSON({}, [createMockSubsectionJSON()])
                     );
                     expect($(".outline-subsection .status-release-value")).not.toContainText("Jul 09, 2014 at 00:00 UTC");
                     expect($(".outline-subsection .status-grading-date")).not.toExist();
                     expect($(".outline-subsection .status-grading-value")).not.toExist();
                 });
+
+                verifyPublishing('subsection', function (options) {
+                    return createMockCourseJSON({}, [
+                        createMockSectionJSON({}, [
+                            createMockSubsectionJSON(options, [
+                                createMockVerticalJSON()
+                            ])
+                        ])
+                    ]);
+                });
+
+                it('publish modal displays a list of unpublished units for the Subsection', function () {
+                    var mockCourseJSON = createMockCourseJSON({}, [
+                            createMockSectionJSON({has_changes: true}, [
+                                createMockSubsectionJSON({has_changes: true}, [
+                                    createMockVerticalJSON(),
+                                    createMockVerticalJSON({has_changes: true}),
+                                    createMockVerticalJSON({published: false})
+                                ]),
+                                createMockSubsectionJSON({has_changes: true}, [
+                                    createMockVerticalJSON({has_changes: true})
+                                ]),
+                                createMockSubsectionJSON({}, [createMockVerticalJSON])
+                            ])
+                        ]), modalWindow;
+
+                    createCourseOutlinePage(this, mockCourseJSON, false);
+                    getItemHeaders('subsection').first().find('.publish-button').click();
+                    modalWindow = $('.wrapper-modal-window');
+                    expect(modalWindow.find('.outline-unit').length).toBe(2);
+                    expect(modalWindow.find('.outline-subsection')).not.toExist();
+                });
             });
 
             // Note: most tests for units can be found in Bok Choy
             describe("Unit", function() {
-                var getMockCourseJSON, createCourseOutlinePageAndShowUnit,
-                    verifyPublishButton;
-
-                getMockCourseJSON = function (options) {
-                    return createMockCourseJSON('mock-course', 'Mock Course', [
-                        createMockSectionJSON('mock-section', 'Mock Section', [
-                            createMockSubsectionJSON('mock-subsection', 'Mock Subsection', [
-                                createMockVerticalJSON(options)
-                            ])
-                        ])
-                    ]);
-                };
-
-                createCourseOutlinePageAndShowUnit = function (test, courseJSON, createOnly) {
-                    outlinePage = createCourseOutlinePage.apply(this, arguments);
-                    expandItemsAndVerifyState('subsection');
-                };
-
-                verifyPublishButton = function (test, courseJSON, createOnly) {
-                    createCourseOutlinePageAndShowUnit.apply(this, arguments);
-                    expect(getItemHeaders('unit').find('.publish-button')).toExist();
-                };
-
                 it('can be deleted', function() {
                     var promptSpy = view_helpers.createPromptSpy();
-                    createCourseOutlinePageAndShowUnit(this, mockCourseJSON);
+                    createCourseOutlinePage(this, mockCourseJSON);
+                    expandItemsAndVerifyState('subsection');
                     getItemHeaders('unit').find('.delete-button').click();
                     view_helpers.confirmPrompt(promptSpy);
                     create_sinon.expectJsonRequest(requests, 'DELETE', '/xblock/mock-unit');
@@ -609,59 +713,23 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     create_sinon.expectJsonRequest(requests, 'GET', '/xblock/outline/mock-section');
                 });
 
-                it('can be published', function() {
-                    var mockCourseJSON = getMockCourseJSON({
-                            has_changes: true
-                        });
-                    createCourseOutlinePageAndShowUnit(this, mockCourseJSON);
-                    getItemHeaders('unit').find('.publish-button').click();
-                    $(".wrapper-modal-window .action-publish").click();
-                    create_sinon.expectJsonRequest(requests, 'POST', '/xblock/mock-unit', {
-                        publish : 'make_public'
-                    });
-                    expect(requests[0].requestHeaders['X-HTTP-Method-Override']).toBe('PATCH');
-                    create_sinon.respondWithJson(requests, {});
-                    create_sinon.expectJsonRequest(requests, 'GET', '/xblock/outline/mock-section');
-                });
-
-                it('should show publish button if the unit is not published and not changed', function() {
-                    var mockCourseJSON = getMockCourseJSON({
-                        has_changes: false,
-                        published: false
-                    });
-                    verifyPublishButton(this, mockCourseJSON);
-                });
-
-                it('should show publish button if the unit is published and changed', function() {
-                    var mockCourseJSON = getMockCourseJSON({
-                        has_changes: true,
-                        published: true
-                    });
-                    verifyPublishButton(this, mockCourseJSON);
-                });
-
-                it('should show publish button if the unit is not published, but changed', function() {
-                    var mockCourseJSON = getMockCourseJSON({
-                        has_changes: true,
-                        published: false
-                    });
-                    verifyPublishButton(this, mockCourseJSON);
-                });
-
-                it('should hide publish button if the unit is not changed, but published', function() {
-                    var mockCourseJSON = getMockCourseJSON({
-                        has_changes: false,
-                        published: true
-                    });
-                    createCourseOutlinePageAndShowUnit(this, mockCourseJSON);
-                    expect(getItemHeaders('unit').find('.publish-button')).not.toExist;
-                });
 
                 it('has a link to the unit page', function() {
                     var unitAnchor;
-                    createCourseOutlinePageAndShowUnit(this, mockCourseJSON);
+                    createCourseOutlinePage(this, mockCourseJSON);
+                    expandItemsAndVerifyState('subsection');
                     unitAnchor = getItemsOfType('unit').find('.unit-title a');
                     expect(unitAnchor.attr('href')).toBe('/container/mock-unit');
+                });
+
+                verifyPublishing('unit', function (options) {
+                    return createMockCourseJSON({}, [
+                        createMockSectionJSON({}, [
+                            createMockSubsectionJSON({}, [
+                                createMockVerticalJSON(options)
+                            ])
+                        ])
+                    ]);
                 });
             });
 
