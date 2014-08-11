@@ -222,8 +222,8 @@ if Backbone?
     addComment: =>
       @model.comment()
 
-    endorseThread: (is_endorsed) =>
-      @model.set 'endorsed', is_endorsed
+    endorseThread: =>
+      @model.set 'endorsed', @$el.find(".action-answer.is-checked").length > 0
 
     submitComment: (event) ->
       event.preventDefault()

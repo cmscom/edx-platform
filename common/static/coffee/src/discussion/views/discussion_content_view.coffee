@@ -140,15 +140,17 @@ if Backbone?
         endorsed: not is_endorsed
         endorsement: if is_endorsed then null else {username: DiscussionUtil.getUser().get("username"), time: new Date().toISOString()}
       errorFunc = () =>
-        DiscussionUtil.discussionAlert(
-          gettext("Sorry"),
-          gettext("We had some trouble updating this thread.  Please try again.")
-        )
+        if @model.get('thread').get('thread_type') == 'question'
+          msg = gettext("We had some trouble marking this response as an answer.  Please try again.")
+        else
+          msg = gettext("We had some trouble marking this response endorsed.  Please try again.")
+        DiscussionUtil.discussionAlert(gettext("Sorry"), msg)
+      beforeFunc = () => @model.trigger("comment:endorse")
       DiscussionUtil.updateWithUndo(
         @model,
         updates,
-        {url: url, type: "POST", data: {endorsed: not is_endorsed}, error: errorFunc, $elem: $(event.currentTarget)},
-      )
+        {url: url, type: "POST", data: {endorsed: not is_endorsed}, beforeSend: beforeFunc, error: errorFunc, $elem: $(event.currentTarget)},
+      ).always(@trigger("comment:endorse"))
 
     toggleVote: (event) =>
       event.preventDefault()
