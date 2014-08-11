@@ -281,9 +281,9 @@ class CMSVideoTest(CMSVideoBaseTest):
 
         self.open_advanced_tab()
 
-        self.video.set_settings_field_value('Video Start Time', '00:00:12')
+        self.video.set_field_value('Video Start Time', '00:00:12')
 
-        self.video.set_settings_field_value('Video Stop Time', '00:00:24')
+        self.video.set_field_value('Video Stop Time', '00:00:24')
 
         self.save_unit_settings()
 
