@@ -221,7 +221,6 @@ class MongoContentstoreBuilder(object):
 
 MODULESTORE_SETUPS = (
     MongoModulestoreBuilder(),
-    VersioningModulestoreBuilder(),
     MixedModulestoreBuilder([('draft', MongoModulestoreBuilder())]),
     MixedModulestoreBuilder([('split', VersioningModulestoreBuilder())]),
 )
