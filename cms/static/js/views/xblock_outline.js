@@ -83,7 +83,8 @@ define(["jquery", "underscore", "gettext", "js/views/baseview", "js/views/utils/
                     addChildLabel: addChildName,
                     defaultNewChildName: defaultNewChildName,
                     isCollapsed: isCollapsed,
-                    includesChildren: this.shouldRenderChildren()
+                    includesChildren: this.shouldRenderChildren(),
+                    hasExplicitStaffLock: this.model.get('has_explicit_staff_lock')
                 });
                 if (this.parentInfo) {
                     this.setElement($(html));
