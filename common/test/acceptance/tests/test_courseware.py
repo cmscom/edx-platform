@@ -66,11 +66,9 @@ class CoursewareTest(UniqueCourseTest):
         """
 
         """
-        self.course_outline.click_subsection_name(parent_css=".subsection-list")
+        self.course_outline.q(css=".subsection-header-actions .configure-button").first.click()
         self.course_outline.q(css="#start_date").fill("01/01/2015")
-
-        # Click any where on page to auto save new date.
-        self.course_outline.q(css=".subsection-display-name-input").first.click()
+        self.course_outline.q(css=".action-save").first.click()
 
     def _auto_auth(self, username, email, staff):
         """
