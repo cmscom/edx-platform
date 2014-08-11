@@ -162,10 +162,10 @@ class @DiscussionUtil
           params["$loading"].loaded()
     return request
 
-  @updateWithUndo: (model, updates, safeAjaxParams, done) ->
+  @updateWithUndo: (model, updates, safeAjaxParams) ->
     undo = _.pick(model.attributes, _.keys(updates))
     model.set(updates)
-    @safeAjax(safeAjaxParams).fail(() -> model.set(undo)).done(done)
+    @safeAjax(safeAjaxParams).fail(() -> model.set(undo))
 
   @bindLocalEvents: ($local, eventsHandler) ->
     for eventSelector, handler of eventsHandler

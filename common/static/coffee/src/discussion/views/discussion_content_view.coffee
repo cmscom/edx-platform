@@ -133,8 +133,7 @@ if Backbone?
         @model,
         updates,
         {url: url, type: "POST", data: {endorsed: not is_endorsed}, $elem: $(event.currentTarget)},
-        () => @trigger "comment:endorse", not is_endorsed
-      )
+      ).done(() => @trigger "comment:endorse", not is_endorsed)
 
     toggleVote: (event) =>
       event.preventDefault()
@@ -147,8 +146,7 @@ if Backbone?
         user,
         updates,
         {url: url, type: "POST", $elem: $(event.currentTarget)},
-        () => if did_vote then @model.unvote() else @model.vote()
-      )
+      ).done(() => if did_vote then @model.unvote() else @model.vote())
 
     togglePin: (event) =>
       event.preventDefault()
