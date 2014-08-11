@@ -53,9 +53,9 @@ if Backbone?
 
     initialize: ->
       @model.bind('change', @renderPartialAttrs, @)
-      @listenTo(@model, "change:endorsed", (model, value, options) =>
+      @listenTo(@model, "change:endorsed", =>
         if @model instanceof Comment
-          @trigger("comment:endorse", model, value, options)
+          @trigger("comment:endorse")
       )
 
   class @DiscussionContentShowView extends DiscussionContentView
@@ -118,16 +118,15 @@ if Backbone?
       event.preventDefault()
       is_subscribed = @model.get("subscribed")
       url = @model.urlFor(if is_subscribed then "unfollow" else "follow")
-      errorFunc = () =>
-        if not is_subscribed
-          msg = gettext("We had some trouble subscribing you to this thread. Please try again.")
-        else
-          msg = gettext("We had some trouble unsubscribing you from this thread. Please try again.")
-        DiscussionUtil.discussionAlert(gettext("Sorry"), msg)
+      if not is_subscribed
+        msg = gettext("We had some trouble subscribing you to this thread. Please try again.")
+      else
+        msg = gettext("We had some trouble unsubscribing you from this thread. Please try again.")
       DiscussionUtil.updateWithUndo(
         @model,
         {"subscribed": not is_subscribed},
-        {url: url, type: "POST", error: errorFunc, $elem: $(event.currentTarget)}
+        {url: url, type: "POST", $elem: $(event.currentTarget)},
+        msg
       )
 
     toggleEndorse: (event) =>
@@ -139,16 +138,17 @@ if Backbone?
       updates =
         endorsed: not is_endorsed
         endorsement: if is_endorsed then null else {username: DiscussionUtil.getUser().get("username"), time: new Date().toISOString()}
-      errorFunc = () =>
-        DiscussionUtil.discussionAlert(
-          gettext("Sorry"),
-          gettext("We had some trouble updating this thread.  Please try again.")
-        )
+      if @model.get('thread').get('thread_type') == 'question'
+        msg = gettext("We had some trouble marking this response as an answer.  Please try again.")
+      else
+        msg = gettext("We had some trouble marking this response endorsed.  Please try again.")
+      beforeFunc = () => @model.trigger("comment:endorse")
       DiscussionUtil.updateWithUndo(
         @model,
         updates,
-        {url: url, type: "POST", data: {endorsed: not is_endorsed}, error: errorFunc, $elem: $(event.currentTarget)},
-      )
+        {url: url, type: "POST", data: {endorsed: not is_endorsed}, beforeSend: beforeFunc, $elem: $(event.currentTarget)},
+        msg
+      ).always(@trigger("comment:endorse"))
 
     toggleVote: (event) =>
       event.preventDefault()
@@ -157,31 +157,26 @@ if Backbone?
       url = @model.urlFor(if did_vote then "unvote" else "upvote")
       updates =
         upvoted_ids: (if did_vote then _.difference else _.union)(user.get('upvoted_ids'), [@model.id])
-      errorFunc = () =>
-        DiscussionUtil.discussionAlert(
-          gettext("Sorry"),
-          gettext("We had some trouble saving your vote.  Please try again.")
-        )
       DiscussionUtil.updateWithUndo(
         user,
         updates,
-        {url: url, type: "POST", error: errorFunc, $elem: $(event.currentTarget)},
+        {url: url, type: "POST", $elem: $(event.currentTarget)},
+        gettext("We had some trouble saving your vote.  Please try again.")
       ).done(() => if did_vote then @model.unvote() else @model.vote())
 
     togglePin: (event) =>
       event.preventDefault()
       is_pinned = @model.get("pinned")
       url = @model.urlFor(if is_pinned then "unPinThread" else "pinThread")
-      errorFunc = () =>
-        if not is_pinned
-          msg = gettext("We had some trouble pinning this thread. Please try again.")
-        else
-          msg = gettext("We had some trouble unpinning this thread. Please try again.")
-        DiscussionUtil.discussionAlert(gettext("Sorry"), msg)
+      if not is_pinned
+        msg = gettext("We had some trouble pinning this thread. Please try again.")
+      else
+        msg = gettext("We had some trouble unpinning this thread. Please try again.")
       DiscussionUtil.updateWithUndo(
         @model,
         {pinned: not is_pinned},
-        {url: url, type: "POST", error: errorFunc, $elem: $(event.currentTarget)},
+        {url: url, type: "POST", $elem: $(event.currentTarget)},
+        msg
       )
 
     toggleReport: (event) =>
@@ -194,29 +189,24 @@ if Backbone?
       url = @model.urlFor(if is_flagged then "unFlagAbuse" else "flagAbuse")
       updates =
         abuse_flaggers: (if is_flagged then _.difference else _.union)(@model.get("abuse_flaggers"), [user.id])
-      errorFunc = () =>
-        DiscussionUtil.discussionAlert(
-          gettext("Sorry"),
-          gettext("We had some trouble updating this thread.  Please try again.")
-        )
       DiscussionUtil.updateWithUndo(
         @model,
         updates,
-        {url: url, type: "POST", error: errorFunc, $elem: $(event.currentTarget)},
+        {url: url, type: "POST", $elem: $(event.currentTarget)},
+        gettext("We had some trouble updating this thread.  Please try again.")
       )
 
     toggleClose: (event) =>
       event.preventDefault()
       updates =
         closed: not @model.get('closed')
-      errorFunc = () =>
-        if not @model.get('closed')
-          msg = gettext("We had some trouble closing this thread.  Please try again.")
-        else
-          msg = gettext("We had some trouble reopening this thread.  Please try again.")
-        DiscussionUtil.discussionAlert(gettext("Sorry"), msg)
+      if not @model.get('closed')
+        msg = gettext("We had some trouble closing this thread.  Please try again.")
+      else
+        msg = gettext("We had some trouble reopening this thread.  Please try again.")
       DiscussionUtil.updateWithUndo(
         @model,
         updates,
-        {url: @model.urlFor("close"), type: "POST", data: updates, error: errorFunc, $elem: $(event.currentTarget)},
+        {url: @model.urlFor("close"), type: "POST", data: updates, $elem: $(event.currentTarget)},
+        msg
       )

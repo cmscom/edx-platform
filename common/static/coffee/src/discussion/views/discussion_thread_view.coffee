@@ -201,8 +201,7 @@ if Backbone?
         response.set('thread', @model)
         view = new ThreadResponseView($.extend({model: response}, options))
         view.on "comment:add", @addComment
-        view.on "comment:endorse", (model, value, options) =>
-          @endorseThread(value)
+        view.on "comment:endorse", @endorseThread
         view.render()
         @$el.find(listSelector).append(view.el)
         view.afterInsert()
@@ -222,8 +221,8 @@ if Backbone?
     addComment: =>
       @model.comment()
 
-    endorseThread: (is_endorsed) =>
-      @model.set 'endorsed', is_endorsed
+    endorseThread: =>
+      @model.set 'endorsed', @$el.find(".action-answer.is-checked").length > 0
 
     submitComment: (event) ->
       event.preventDefault()

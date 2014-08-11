@@ -166,8 +166,7 @@ if Backbone?
       @showView = new ThreadResponseShowView(model: @model)
       @showView.bind "response:_delete", @_delete
       @showView.bind "response:edit", @edit
-      @showView.on "comment:endorse", (model, value, options) =>
-        @trigger("comment:endorse", model, value, options)
+      @showView.on "comment:endorse", => @trigger("comment:endorse")
 
     renderShowView: () ->
       @renderSubView(@showView)
