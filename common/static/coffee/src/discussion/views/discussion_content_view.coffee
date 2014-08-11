@@ -53,6 +53,10 @@ if Backbone?
 
     initialize: ->
       @model.bind('change', @renderPartialAttrs, @)
+      @listenTo(@model, "change:endorsed", (model, value, options) =>
+        if @model instanceof Comment
+          @trigger("comment:endorse", model, value, options)
+      )
 
   class @DiscussionContentShowView extends DiscussionContentView
     events:
@@ -114,10 +118,16 @@ if Backbone?
       event.preventDefault()
       is_subscribed = @model.get("subscribed")
       url = @model.urlFor(if is_subscribed then "unfollow" else "follow")
+      errorFunc = () =>
+        if not is_subscribed
+          msg = gettext("We had some trouble subscribing you to this thread. Please try again.")
+        else
+          msg = gettext("We had some trouble unsubscribing you from this thread. Please try again.")
+        DiscussionUtil.discussionAlert(gettext("Sorry"), msg)
       DiscussionUtil.updateWithUndo(
         @model,
         {"subscribed": not is_subscribed},
-        {url: url, type: "POST", $elem: $(event.currentTarget)}
+        {url: url, type: "POST", error: errorFunc, $elem: $(event.currentTarget)}
       )
 
     toggleEndorse: (event) =>
@@ -129,11 +139,16 @@ if Backbone?
       updates =
         endorsed: not is_endorsed
         endorsement: if is_endorsed then null else {username: DiscussionUtil.getUser().get("username"), time: new Date().toISOString()}
+      errorFunc = () =>
+        DiscussionUtil.discussionAlert(
+          gettext("Sorry"),
+          gettext("We had some trouble updating this thread.  Please try again.")
+        )
       DiscussionUtil.updateWithUndo(
         @model,
         updates,
-        {url: url, type: "POST", data: {endorsed: not is_endorsed}, $elem: $(event.currentTarget)},
-      ).done(() => @trigger "comment:endorse", not is_endorsed)
+        {url: url, type: "POST", data: {endorsed: not is_endorsed}, error: errorFunc, $elem: $(event.currentTarget)},
+      )
 
     toggleVote: (event) =>
       event.preventDefault()
@@ -142,10 +157,15 @@ if Backbone?
       url = @model.urlFor(if did_vote then "unvote" else "upvote")
       updates =
         upvoted_ids: (if did_vote then _.difference else _.union)(user.get('upvoted_ids'), [@model.id])
+      errorFunc = () =>
+        DiscussionUtil.discussionAlert(
+          gettext("Sorry"),
+          gettext("We had some trouble saving your vote.  Please try again.")
+        )
       DiscussionUtil.updateWithUndo(
         user,
         updates,
-        {url: url, type: "POST", $elem: $(event.currentTarget)},
+        {url: url, type: "POST", error: errorFunc, $elem: $(event.currentTarget)},
       ).done(() => if did_vote then @model.unvote() else @model.vote())
 
     togglePin: (event) =>
@@ -153,7 +173,7 @@ if Backbone?
       is_pinned = @model.get("pinned")
       url = @model.urlFor(if is_pinned then "unPinThread" else "pinThread")
       errorFunc = () =>
-        if newPinned
+        if not is_pinned
           msg = gettext("We had some trouble pinning this thread. Please try again.")
         else
           msg = gettext("We had some trouble unpinning this thread. Please try again.")
@@ -174,16 +194,29 @@ if Backbone?
       url = @model.urlFor(if is_flagged then "unFlagAbuse" else "flagAbuse")
       updates =
         abuse_flaggers: (if is_flagged then _.difference else _.union)(@model.get("abuse_flaggers"), [user.id])
+      errorFunc = () =>
+        DiscussionUtil.discussionAlert(
+          gettext("Sorry"),
+          gettext("We had some trouble updating this thread.  Please try again.")
+        )
       DiscussionUtil.updateWithUndo(
         @model,
         updates,
-        {url: url, type: "POST", $elem: $(event.currentTarget)},
+        {url: url, type: "POST", error: errorFunc, $elem: $(event.currentTarget)},
       )
 
     toggleClose: (event) =>
       event.preventDefault()
+      updates =
+        closed: not @model.get('closed')
+      errorFunc = () =>
+        if not @model.get('closed')
+          msg = gettext("We had some trouble closing this thread.  Please try again.")
+        else
+          msg = gettext("We had some trouble reopening this thread.  Please try again.")
+        DiscussionUtil.discussionAlert(gettext("Sorry"), msg)
       DiscussionUtil.updateWithUndo(
         @model,
-        {closed: not @model.get('closed')},
-        {url: @model.urlFor("close"), type: "POST", $elem: $(event.currentTarget)},
+        updates,
+        {url: @model.urlFor("close"), type: "POST", data: updates, error: errorFunc, $elem: $(event.currentTarget)},
       )
