@@ -112,89 +112,80 @@ if Backbone?
 
     toggleFollow: (event) =>
       event.preventDefault()
-      if not @model.get("subscribed")
-        @model.follow()
-        url = @model.urlFor("follow")
-      else
-        @model.unfollow()
-        url = @model.urlFor("unfollow")
-      DiscussionUtil.safeAjax
-        url: url
-        type: "POST"
+      is_subscribed = @model.get("subscribed")
+      url = @model.urlFor(if is_subscribed then "unfollow" else "follow")
+      DiscussionUtil.updateWithUndo(
+        @model,
+        {"subscribed": not is_subscribed},
+        {url: url, type: "POST", $elem: $(event.currentTarget)}
+      )
 
     toggleEndorse: (event) =>
       event.preventDefault()
       if not @model.canBeEndorsed()
         return
-      url = @model.urlFor('endorse')
-      newEndorsed = not @model.get('endorsed')
-      endorsement = {
-        "username": window.user.get("username"),
-        "time": new Date().toISOString()
-      }
-      @model.set(
-        "endorsed": newEndorsed
-        "endorsement": if newEndorsed then endorsement else null
+      is_endorsed = @model.get("endorsed")
+      url = @model.urlFor("endorse")
+      updates =
+        endorsed: not is_endorsed
+        endorsement: if is_endorsed then null else {username: DiscussionUtil.getUser().get("username"), time: new Date().toISOString()}
+      DiscussionUtil.updateWithUndo(
+        @model,
+        updates,
+        {url: url, type: "POST", data: {endorsed: not is_endorsed}, $elem: $(event.currentTarget)},
+        () => @trigger "comment:endorse", not is_endorsed
       )
-      @trigger "comment:endorse", newEndorsed
-      DiscussionUtil.safeAjax
-        url: url
-        data:
-          endorsed: newEndorsed
-        type: "POST"
 
     toggleVote: (event) =>
       event.preventDefault()
-      if window.user.voted(@model)
-        window.user.unvote(@model)
-        url = @model.urlFor("unvote")
-      else
-        window.user.vote(@model)
-        url = @model.urlFor("upvote")
-      DiscussionUtil.safeAjax
-        url: url
-        type: "POST"
+      user = DiscussionUtil.getUser()
+      did_vote = user.voted(@model)
+      url = @model.urlFor(if did_vote then "unvote" else "upvote")
+      updates =
+        upvoted_ids: (if did_vote then _.difference else _.union)(user.get('upvoted_ids'), [@model.id])
+      DiscussionUtil.updateWithUndo(
+        user,
+        updates,
+        {url: url, type: "POST", $elem: $(event.currentTarget)},
+        () => if did_vote then @model.unvote() else @model.vote()
+      )
 
     togglePin: (event) =>
       event.preventDefault()
-      newPinned = not @model.get("pinned")
-      if newPinned
-        url = @model.urlFor("pinThread")
-      else
-        url = @model.urlFor("unPinThread")
-      @model.set("pinned", newPinned)
-      DiscussionUtil.safeAjax
-        url: url
-        type: "POST"
-        error: =>
-          if newPinned
-            msg = gettext("We had some trouble pinning this thread. Please try again.")
-          else
-            msg = gettext("We had some trouble unpinning this thread. Please try again.")
-          DiscussionUtil.discussionAlert(gettext("Sorry"), msg)
-          @model.set("pinned", not newPinned)
+      is_pinned = @model.get("pinned")
+      url = @model.urlFor(if is_pinned then "unPinThread" else "pinThread")
+      errorFunc = () =>
+        if newPinned
+          msg = gettext("We had some trouble pinning this thread. Please try again.")
+        else
+          msg = gettext("We had some trouble unpinning this thread. Please try again.")
+        DiscussionUtil.discussionAlert(gettext("Sorry"), msg)
+      DiscussionUtil.updateWithUndo(
+        @model,
+        {pinned: not is_pinned},
+        {url: url, type: "POST", error: errorFunc, $elem: $(event.currentTarget)},
+      )
 
     toggleReport: (event) =>
       event.preventDefault()
-      newFlaggers = _.clone(@model.get("abuse_flaggers"))
-      if window.user.id in @model.get("abuse_flaggers") or (DiscussionUtil.isFlagModerator and @model.get("abuse_flaggers").length > 0)
-        url = @model.urlFor("unFlagAbuse")
-        newFlaggers.pop(window.user.id)
+      user = DiscussionUtil.getUser()
+      if user.id in @model.get("abuse_flaggers") or (DiscussionUtil.isFlagModerator and @model.get("abuse_flaggers").length > 0)
+        is_flagged = true
       else
-        url = @model.urlFor("flagAbuse")
-        newFlaggers.push(window.user.id)
-      @model.set("abuse_flaggers", newFlaggers)
-      DiscussionUtil.safeAjax
-        url: url
-        type: "POST"
+        is_flagged = false
+      url = @model.urlFor(if is_flagged then "unFlagAbuse" else "flagAbuse")
+      updates =
+        abuse_flaggers: (if is_flagged then _.difference else _.union)(@model.get("abuse_flaggers"), [user.id])
+      DiscussionUtil.updateWithUndo(
+        @model,
+        updates,
+        {url: url, type: "POST", $elem: $(event.currentTarget)},
+      )
 
     toggleClose: (event) =>
       event.preventDefault()
-      url = @model.urlFor("close")
-      newClosed = not @model.get("closed")
-      @model.set("closed", newClosed)
-      DiscussionUtil.safeAjax
-        url: url
-        data:
-          closed: newClosed
-        type: "POST"
+      DiscussionUtil.updateWithUndo(
+        @model,
+        {closed: not @model.get('closed')},
+        {url: @model.urlFor("close"), type: "POST", $elem: $(event.currentTarget)},
+      )
