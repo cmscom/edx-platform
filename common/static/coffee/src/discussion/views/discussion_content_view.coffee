@@ -116,15 +116,15 @@ if Backbone?
 
     toggleFollow: (event) =>
       event.preventDefault()
-      is_subscribed = @model.get("subscribed")
-      url = @model.urlFor(if is_subscribed then "unfollow" else "follow")
-      if not is_subscribed
+      is_subscribing = not @model.get("subscribed")
+      url = @model.urlFor(if is_subscribing then "follow" else "unfollow")
+      if is_subscribing
         msg = gettext("We had some trouble subscribing you to this thread. Please try again.")
       else
         msg = gettext("We had some trouble unsubscribing you from this thread. Please try again.")
       DiscussionUtil.updateWithUndo(
         @model,
-        {"subscribed": not is_subscribed},
+        {"subscribed": is_subscribing},
         {url: url, type: "POST", $elem: $(event.currentTarget)},
         msg
       )
@@ -133,48 +133,54 @@ if Backbone?
       event.preventDefault()
       if not @model.canBeEndorsed()
         return
-      is_endorsed = @model.get("endorsed")
+      is_endorsing = not @model.get("endorsed")
       url = @model.urlFor("endorse")
       updates =
-        endorsed: not is_endorsed
-        endorsement: if is_endorsed then null else {username: DiscussionUtil.getUser().get("username"), time: new Date().toISOString()}
+        endorsed: is_endorsing
+        endorsement: if is_endorsing then {username: DiscussionUtil.getUser().get("username"), time: new Date().toISOString()} else null
       if @model.get('thread').get('thread_type') == 'question'
-        msg = gettext("We had some trouble marking this response as an answer.  Please try again.")
+        if is_endorsing
+          msg = gettext("We had some trouble marking this response as an answer.  Please try again.")
+        else
+          msg = gettext("We had some trouble removing this response as an answer.  Please try again.")
       else
-        msg = gettext("We had some trouble marking this response endorsed.  Please try again.")
+        if is_endorsing
+          msg = gettext("We had some trouble marking this response endorsed.  Please try again.")
+        else
+          msg = gettext("We had some trouble removing this endorsement.  Please try again.")
       beforeFunc = () => @model.trigger("comment:endorse")
       DiscussionUtil.updateWithUndo(
         @model,
         updates,
-        {url: url, type: "POST", data: {endorsed: not is_endorsed}, beforeSend: beforeFunc, $elem: $(event.currentTarget)},
+        {url: url, type: "POST", data: {endorsed: is_endorsing}, beforeSend: beforeFunc, $elem: $(event.currentTarget)},
         msg
-      ).always(@trigger("comment:endorse"))
+      ).always(@trigger("comment:endorse")) # ensures UI components get updated to the correct state when ajax completes
 
     toggleVote: (event) =>
       event.preventDefault()
       user = DiscussionUtil.getUser()
-      did_vote = user.voted(@model)
-      url = @model.urlFor(if did_vote then "unvote" else "upvote")
+      is_voting = not user.voted(@model)
+      url = @model.urlFor(if is_voting then "upvote" else "unvote")
       updates =
-        upvoted_ids: (if did_vote then _.difference else _.union)(user.get('upvoted_ids'), [@model.id])
+        upvoted_ids: (if is_voting then _.union else _.difference)(user.get('upvoted_ids'), [@model.id])
       DiscussionUtil.updateWithUndo(
         user,
         updates,
         {url: url, type: "POST", $elem: $(event.currentTarget)},
         gettext("We had some trouble saving your vote.  Please try again.")
-      ).done(() => if did_vote then @model.unvote() else @model.vote())
+      ).done(() => if is_voting then @model.vote() else @model.unvote())
 
     togglePin: (event) =>
       event.preventDefault()
-      is_pinned = @model.get("pinned")
-      url = @model.urlFor(if is_pinned then "unPinThread" else "pinThread")
-      if not is_pinned
+      is_pinning = not @model.get("pinned")
+      url = @model.urlFor(if is_pinning then "pinThread" else "unPinThread")
+      if is_pinning
         msg = gettext("We had some trouble pinning this thread. Please try again.")
       else
         msg = gettext("We had some trouble unpinning this thread. Please try again.")
       DiscussionUtil.updateWithUndo(
         @model,
-        {pinned: not is_pinned},
+        {pinned: is_pinning},
         {url: url, type: "POST", $elem: $(event.currentTarget)},
         msg
       )
@@ -183,27 +189,29 @@ if Backbone?
       event.preventDefault()
       user = DiscussionUtil.getUser()
       if user.id in @model.get("abuse_flaggers") or (DiscussionUtil.isFlagModerator and @model.get("abuse_flaggers").length > 0)
-        is_flagged = true
+        is_flagging = false
+        msg = gettext("We had some trouble removing your flag on this post.  Please try again.")
       else
-        is_flagged = false
-      url = @model.urlFor(if is_flagged then "unFlagAbuse" else "flagAbuse")
+        is_flagging = true
+        msg = gettext("We had some trouble reporting this post.  Please try again.")
+      url = @model.urlFor(if is_flagging then "flagAbuse" else "unFlagAbuse")
       updates =
-        abuse_flaggers: (if is_flagged then _.difference else _.union)(@model.get("abuse_flaggers"), [user.id])
+        abuse_flaggers: (if is_flagging then _.union else _.difference)(@model.get("abuse_flaggers"), [user.id])
       DiscussionUtil.updateWithUndo(
         @model,
         updates,
         {url: url, type: "POST", $elem: $(event.currentTarget)},
-        gettext("We had some trouble updating this thread.  Please try again.")
+        msg
       )
 
     toggleClose: (event) =>
       event.preventDefault()
-      updates =
-        closed: not @model.get('closed')
-      if not @model.get('closed')
+      is_closing = not model.get('closed')
+      if is_closing
         msg = gettext("We had some trouble closing this thread.  Please try again.")
       else
         msg = gettext("We had some trouble reopening this thread.  Please try again.")
+      updates = {closed: is_closing}
       DiscussionUtil.updateWithUndo(
         @model,
         updates,
