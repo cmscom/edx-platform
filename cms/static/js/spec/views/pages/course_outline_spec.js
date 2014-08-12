@@ -362,7 +362,6 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     $(".edit-outline-item-modal .action-save").click();
 
                     create_sinon.expectJsonRequest(requests, 'POST', '/xblock/mock-section', {
-                        "publish": "republish",
                         "metadata":{
                             "visible_to_staff_only": null,
                             "start":"2015-01-02T00:00:00.000Z",
@@ -509,7 +508,6 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     setEditModalValues("7/9/2014", "7/10/2014", "Lab");
                     $(".edit-outline-item-modal .action-save").click();
                     create_sinon.expectJsonRequest(requests, 'POST', '/xblock/mock-subsection', {
-                        "publish": "republish",
                         "graderType":"Lab",
                         "metadata":{
                             "visible_to_staff_only" : null,
