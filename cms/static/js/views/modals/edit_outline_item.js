@@ -92,7 +92,8 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/modals/base_mod
              */
             getContext: function () {
                 return _.extend({
-                    xblockInfo: this.model
+                    xblockInfo: this.model,
+                    xblockType: XBlockViewUtils.getXBlockType(this.model.get('category'), this.parentInfo, true)
                 }, this.invokeComponentMethod('getContext'));
             },
 

@@ -102,7 +102,8 @@
 
                         <% if (hasExplicitStaffLock) { %>
                             <p class="tip tip-warning">
-                              <%= gettext('If you make this unit visible to students, students will be able to see its content after the release date has passed and you have published the unit.') %>
+                              <% var message = gettext('If you make this %(xblockType)s visible to students, students will be able to see its content after the release date has passed and you have published the %(xblockType)s.'); %>
+                              <%= interpolate(message, { xblockType: xblockType }, true) %>
                             </p>
                         <% } %>
 
