@@ -130,6 +130,7 @@ class SplitTestFields(object):
 
 @XBlock.needs('user_tags')  # pylint: disable=abstract-method
 @XBlock.wants('partitions')
+@XBlock.wants('user')
 class SplitTestModule(SplitTestFields, XModule, StudioEditableModule):
     """
     Show the user the appropriate child.  Uses the ExperimentState
@@ -299,8 +300,12 @@ class SplitTestModule(SplitTestFields, XModule, StudioEditableModule):
         for active_child_descriptor in children:
             active_child = self.system.get_module(active_child_descriptor)
             if active_child.category == 'vertical':
-                active_child.display_name = self.get_display_name_for_vertical(active_child)
-                active_child.save()
+                new_display_name = self.get_display_name_for_vertical(active_child)
+                if new_display_name:
+                    active_child.display_name = new_display_name
+                    active_child.save()
+                    user_id = self.descriptor.runtime.service(self, 'user').user_id
+                    self.descriptor.runtime.modulestore.update_item(active_child, user_id)
             rendered_child = active_child.render(StudioEditableModule.get_preview_view_name(active_child), context)
             fragment.add_frag_resources(rendered_child)
             html = html + rendered_child.content
