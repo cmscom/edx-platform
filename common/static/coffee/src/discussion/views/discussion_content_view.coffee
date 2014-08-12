@@ -107,6 +107,7 @@ if Backbone?
 
       pinned: (pinned) ->
         @updateButtonState(".action-pin", pinned)
+        @$(".forum-post-label-pinned").toggle(pinned)
 
       abuse_flaggers: (abuse_flaggers) ->
         flagged = (
@@ -114,10 +115,11 @@ if Backbone?
           (DiscussionUtil.isFlagModerator and abuse_flaggers.length > 0)
         )
         @updateButtonState(".action-report", flagged)
+        @$(".forum-post-label-reported").toggle(flagged)
 
       closed: (closed) ->
         @updateButtonState(".action-close", closed)
-        @$(".post-status-closed").toggle(closed)
+        @$(".forum-post-label-closed").toggle(closed)
     })
 
     showSecondaryActions: (event) =>

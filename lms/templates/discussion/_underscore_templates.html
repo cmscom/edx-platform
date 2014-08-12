@@ -64,9 +64,10 @@
                   post_type="<%- thread_type %>",
                   time_ago="<span class='timeago' title='<%- created_at %>'><%- created_at %></span>"
               )}
-
-              <span class="post-status-closed top-post-status" style="display: none">
-                ${_("&bull; This thread is closed.")}
+              <span class="forum-post-labels-secondary">
+                  <span class="forum-post-label-pinned" style="display: none"><i class="icon icon-pushpin"></i>${_("Pinned")}</span>
+                  <span class="forum-post-label-reported" style="display: none"><i class="icon icon-flag"></i>${_("Reported")}</span>
+                  <span class="forum-post-label-closed" style="display: none"><i class="icon icon-lock"></i>${_("Closed")}</span>
               </span>
           </p>
       </header>

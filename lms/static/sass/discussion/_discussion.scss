@@ -604,6 +604,31 @@ body.discussion {
   }
 }
 
+
+.forum-post-label-pinned {
+  @include forum-post-label($forum-color-pinned);
+}
+
+.forum-post-label-following {
+  @include forum-post-label($forum-color-following);
+}
+
+.forum-post-label-reported {
+  @include forum-post-label($forum-color-reported);
+}
+
+.forum-post-label-closed {
+  @include forum-post-label($forum-color-closed);
+}
+
+.forum-post-label-staff {
+  @include forum-post-label($forum-color-staff);
+}
+
+.forum-post-label-community-ta {
+  @include forum-post-label($forum-color-community-ta);
+}
+
 // ====================
 
 // post pagination

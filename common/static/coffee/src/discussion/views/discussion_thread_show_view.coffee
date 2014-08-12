@@ -10,6 +10,7 @@ if Backbone?
       @template = _.template($("#thread-show-template").html())
       context = @model.toJSON()
       context.mode = @mode
+      context.flagged = @model.isFlagged()
       @template(context)
 
     render: ->
