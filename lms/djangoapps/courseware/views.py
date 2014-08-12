@@ -265,7 +265,12 @@ def index(request, course_id, chapter=None, section=None,
 
      - HTTPresponse
     """
-    course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+
+    try:
+        course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+    except InvalidKeyError:
+        raise Http404
+
     user = User.objects.prefetch_related("groups").get(id=request.user.id)
     request.user = user  # keep just one instance of User
     course = get_course_with_access(user, 'load', course_key, depth=2)
@@ -462,7 +467,11 @@ def jump_to_id(request, course_id, module_id):
     This entry point allows for a shorter version of a jump to where just the id of the element is
     passed in. This assumes that id is unique within the course_id namespace
     """
-    course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+    try:
+        course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+    except InvalidKeyError:
+        raise Http404
+
     items = modulestore().get_items(course_key, qualifiers={'name': module_id})
 
     if len(items) == 0:
@@ -521,7 +530,12 @@ def course_info(request, course_id):
 
     Assumes the course_id is in a valid format.
     """
-    course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+
+    try:
+        course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+    except InvalidKeyError:
+        raise Http404
+
     course = get_course_with_access(request.user, 'load', course_key)
     staff_access = has_access(request.user, 'staff', course)
     masq = setup_masquerade(request, staff_access)    # allow staff to toggle masquerade on info page
@@ -549,6 +563,7 @@ def static_tab(request, course_id, tab_slug):
 
     Assumes the course_id is in a valid format.
     """
+
     try:
         course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
     except InvalidKeyError:
@@ -584,7 +599,12 @@ def syllabus(request, course_id):
 
     Assumes the course_id is in a valid format.
     """
-    course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+
+    try:
+        course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+    except InvalidKeyError:
+        raise Http404
+
     course = get_course_with_access(request.user, 'load', course_key)
     staff_access = has_access(request.user, 'staff', course)
 
@@ -620,7 +640,12 @@ def course_about(request, course_id):
         settings.FEATURES.get('ENABLE_MKTG_SITE', False)
     ):
         raise Http404
-    course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+
+    try:
+        course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+    except InvalidKeyError:
+        raise Http404
+
     course = get_course_with_access(request.user, 'see_exists', course_key)
     registered = registered_for_course(course, request.user)
     staff_access = has_access(request.user, 'staff', course)
@@ -687,7 +712,11 @@ def mktg_course_about(request, course_id):
     This is the button that gets put into an iframe on the Drupal site
     """
 
-    course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+    try:
+        course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+    except InvalidKeyError:
+        raise Http404
+
     try:
         course = get_course_with_access(request.user, 'see_exists', course_key)
     except (ValueError, Http404) as e:
@@ -728,8 +757,14 @@ def progress(request, course_id, student_id=None):
     Wraps "_progress" with the manual_transaction context manager just in case
     there are unanticipated errors.
     """
+
+    try:
+        course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+    except InvalidKeyError:
+        raise Http404
+
     with grades.manual_transaction():
-        return _progress(request, SlashSeparatedCourseKey.from_deprecated_string(course_id), student_id)
+        return _progress(request, course_key, student_id)
 
 
 def _progress(request, course_key, student_id):

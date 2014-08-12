@@ -152,6 +152,10 @@ class ViewsTestCase(TestCase):
         response = self.client.get('/courses/MITx/3.091X/')
         self.assertEqual(response.status_code, 404)
 
+    def test_incomplete_course_id(self):
+        response = self.client.get('/courses/MITx/')
+        self.assertEqual(response.status_code, 404)
+
     def test_index_invalid_position(self):
         request_url = '/'.join([
             '/courses',
