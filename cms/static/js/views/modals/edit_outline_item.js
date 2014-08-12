@@ -287,6 +287,12 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/modals/base_mod
                 // Setting visible_to_staff_only to null when disabled will delete the field from this
                 // xblock, allowing it to inherit the value of its ancestors.
                 return this.hasChanges() ? { visible_to_staff_only: this.isLocked() ? true : null } : {};
+            },
+
+            getContext: function () {
+                return {
+                    hasExplicitStaffLock: this.isModelLocked()
+                }
             }
         });
 

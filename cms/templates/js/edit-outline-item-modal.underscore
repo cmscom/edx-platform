@@ -100,9 +100,11 @@
                           <%= gettext('Hide from students') %>
                         </label>
 
-                        <p class="tip tip-warning">
-                          <%= gettext('If you make this unit visible to students, students will be able to see its content after the release date has passed and you have published the unit.') %>
-                        </p>
+                        <% if (hasExplicitStaffLock) { %>
+                            <p class="tip tip-warning">
+                              <%= gettext('If you make this unit visible to students, students will be able to see its content after the release date has passed and you have published the unit.') %>
+                            </p>
+                        <% } %>
 
                         <p class="tip">
                           <% if (xblockInfo.isChapter()) { %>

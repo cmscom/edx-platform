@@ -349,14 +349,14 @@
 
         // CASE: unchecked
         ~ .tip-warning {
-          display: none;
+          display: block;
         }
 
         // CASE: checked
         &:checked {
 
           ~ .tip-warning {
-            display: block;
+            display: none;
           }
         }
       }
