@@ -686,6 +686,13 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
             xblock_info["staff_lock_from"] = _get_staff_lock_from(xblock)
         else:
             xblock_info["staff_lock_from"] = None
+    if course_outline:
+        if xblock_info["has_explicit_staff_lock"]:
+            xblock_info["staff_only_message"] = True
+        elif child_info and child_info["children"]:
+            xblock_info["staff_only_message"] = all([child["staff_only_message"] for child in child_info["children"]])
+        else:
+            xblock_info["staff_only_message"] = False
 
     return xblock_info
 

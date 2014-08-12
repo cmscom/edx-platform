@@ -84,7 +84,8 @@ define(["jquery", "underscore", "gettext", "js/views/baseview", "js/views/utils/
                     defaultNewChildName: defaultNewChildName,
                     isCollapsed: isCollapsed,
                     includesChildren: this.shouldRenderChildren(),
-                    hasExplicitStaffLock: this.model.get('has_explicit_staff_lock')
+                    hasExplicitStaffLock: this.model.get('has_explicit_staff_lock'),
+                    staffOnlyMessage: this.model.get('staff_only_message')
                 });
                 if (this.parentInfo) {
                     this.setElement($(html));

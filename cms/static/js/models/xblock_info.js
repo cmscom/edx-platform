@@ -112,7 +112,11 @@ function(Backbone, _, str, ModuleUtils) {
              * this will either be the parent subsection or the grandparent section.
              * This can be null if the xblock has no inherited staff lock.
              */
-            'staff_lock_from': null
+            'staff_lock_from': null,
+            /**
+             * True iff this xblock should display a "Contains staff only content" message.
+             */
+            'staff_only_message': null
         },
 
         initialize: function () {
