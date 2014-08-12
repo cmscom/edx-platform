@@ -18,7 +18,6 @@ from ..pages.studio.settings_advanced import AdvancedSettingsPage
 from ..pages.studio.container import ContainerPage
 from ..pages.studio.settings_group_configurations import GroupConfigurationsPage
 from ..pages.studio.utils import add_advanced_component
-from ..pages.studio.unit import UnitPage
 from ..pages.studio.container import ContainerPage
 from ..pages.xblock.utils import wait_for_xblock_initialization
 
