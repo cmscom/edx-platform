@@ -59,6 +59,40 @@ DEFAULT_SETTINGS = [
     ['YouTube ID for 1.5x speed', '', False]
 ]
 
+VIDEO_URL_ERROR_MESSAGES = {
+    'url_format': u'Incorrect url format.',
+    'file_type': u'Link types should be unique.',
+    'links_duplication': u'Links should be unique.',
+}
+
+TRANSCRIPT_STATUSES = {
+    'found': u'Timed Transcript Found',
+    'not found on edx': u'No EdX Timed Transcript',
+    'not found': u'No Timed Transcript',
+    'replace': u'Timed Transcript Conflict',
+    'uploaded_successfully': u'Timed Transcript Uploaded Successfully',
+    'use existing': u'Confirm Timed Transcript',
+}
+
+SELECTORS = {
+    'error_bar': '.transcripts-error-message',
+    'url_inputs': '.videolist-settings-item input.input',
+    'collapse_link': '.collapse-action.collapse-setting',
+    'collapse_bar': '.videolist-extra-videos',
+    'status_bar': '.transcripts-message-status',
+}
+
+# button type , button css selector, button message
+TRANSCRIPTS_BUTTONS = {
+    'import': ('.setting-import', 'Import YouTube Transcript'),
+    'download_to_edit': ('.setting-download', 'Download Transcript for Editing'),
+    'disabled_download_to_edit': ('.setting-download.is-disabled', 'Download Transcript for Editing'),
+    'upload_new_timed_transcripts': ('.setting-upload', 'Upload New Transcript'),
+    'replace': ('.setting-replace', 'Yes, replace the edX transcript with the YouTube transcript'),
+    'choose': ('.setting-choose', 'Timed Transcript from {}'),
+    'use_existing': ('.setting-use-existing', 'Use Current Transcript'),
+}
+
 
 @js_defined('window.Video', 'window.RequireJS.require', 'window.jQuery', 'window.XModule', 'window.XBlock',
             'window.MathJax.isReady')
@@ -103,16 +137,17 @@ class VideoComponentPage(VideoPage):
                            'Video Buffering Completed')
             self._wait_for(lambda: self.q(css=CLASS_SELECTORS['video_controls']).visible, 'Player Controls are Visible')
 
-    def click_button(self, button_name, index=0):
+    def click_button(self, button_name, key_map=BUTTON_SELECTORS, index=0):
         """
         Click on a button as specified by `button_name`
 
         Arguments:
             button_name (str): button name
+            key_map (dict): name of dict in `button_name` is present
             index (int): query index
 
         """
-        self.q(css=BUTTON_SELECTORS[button_name]).nth(index).click()
+        self.q(css=key_map[button_name]).nth(index).click()
         self.wait_for_ajax()
 
     @staticmethod
@@ -490,3 +525,70 @@ class VideoComponentPage(VideoPage):
         self.wait_for_captions()
         selector = '.subtitles > li:nth-child({})'
         return ' '.join([self.q(css=selector.format(i)).text[0] for i in range(1, 6)])
+
+    def set_url_field(self, url, field_number):
+        """
+        Set video url field in basic settings tab.
+
+        Arguments:
+            url (str): video url
+            field_number (int): video url field number
+
+        """
+        if self.q(css=SELECTORS['collapse_bar']).visible is False:
+            self.click_button('collapse_link', key_map=SELECTORS)
+
+        self.q(css=SELECTORS['url_inputs']).nth(field_number - 1).fill(url)
+
+    def field_status_message(self):
+        """
+        Get video url field status/error message.
+
+        Returns:
+            str: status/error message
+
+        """
+        if self.q(css=SELECTORS['error_bar']).visible:
+            return self.q(css=SELECTORS['error_bar']).text[0]
+        else:
+            return ''
+
+    def url_field_status(self, *field_numbers):
+        """
+        Get video url field status(enable/disable).
+
+        Arguments:
+            url (str): video url
+            field_numbers (tuple or None): field numbers to check status for, None means get status for all.
+                                           tuple items will be integers and must start from 1
+
+        Returns:
+            dict: field numbers as keys and field status(bool) as values, False means a field is disabled
+
+        """
+        if field_numbers:
+            index_list = map(lambda number: number - 1, field_numbers)
+        else:
+            index_list = range(3)  # maximum three fields
+
+        statuses = {}
+        for index in index_list:
+            status = 'is-disabled' not in self.q(css=SELECTORS['url_inputs']).nth(index).attrs('class')[0]
+            statuses[index + 1] = status
+
+        return statuses
+
+    def clear_fields(self):
+        """
+        Clear video url fields.
+        """
+        script = """
+        $('{selector}')
+            .prop('disabled', false)
+            .removeClass('is-disabled')
+            .val('')
+            .trigger('input');
+        """.format(selector=SELECTORS['url_inputs'])
+        self.browser.execute_script(script)
+
+        self.wait_for_ajax()
