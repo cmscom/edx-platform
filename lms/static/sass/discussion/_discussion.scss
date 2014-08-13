@@ -94,7 +94,7 @@ body.discussion {
     }
 
     h1 {
-      margin-bottom: ($baseline/2);
+      margin-bottom: ($baseline/4);
       font-size: 28px;
       font-weight: 700;
       letter-spacing: 0;
@@ -103,7 +103,6 @@ body.discussion {
 
     .posted-details {
       font-size: 12px;
-      font-style: italic;
       color: #888;
 
       .username {
@@ -114,7 +113,6 @@ body.discussion {
 
       .timeago, .top-post-status {
         color: inherit;
-        font-style: italic;
       }
     }
 

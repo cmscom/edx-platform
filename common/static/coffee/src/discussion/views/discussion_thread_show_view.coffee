@@ -11,6 +11,7 @@ if Backbone?
       context = @model.toJSON()
       context.mode = @mode
       context.flagged = @model.isFlagged()
+      context.author_display = @getAuthorDisplay()
       @template(context)
 
     render: ->

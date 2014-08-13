@@ -224,3 +224,6 @@ if Backbone?
         data:
           closed: newClosed
         type: "POST"
+
+    getAuthorDisplay: ->
+      _.template($("#post-author-display-template").html())(_.defaults(@model.attributes, {"username": null}))
