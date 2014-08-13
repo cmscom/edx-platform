@@ -32,12 +32,12 @@ body.discussion, .discussion-module {
     @include forum-post-label($forum-color-community-ta);
   }
 
-  .author-label-staff {
-    @include forum-author-label($forum-color-staff);
+  .user-label-staff {
+    @include forum-user-label($forum-color-staff);
   }
 
-  .author-label-community-ta {
-    @include forum-author-label($forum-color-community-ta);
+  .user-label-community-ta {
+    @include forum-user-label($forum-color-community-ta);
   }
 
 }
