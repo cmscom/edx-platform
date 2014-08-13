@@ -277,11 +277,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/modals/base_mod
             },
 
             getRequestData: function() {
-                if (this.model.isChapter() || this.model.isSequential()) {
-                    return {};
-                } else {
-                    return this.hasChanges() ? { publish: 'republish' } : {};
-                }
+                return this.hasChanges() ? { publish: 'republish' } : {};
             },
 
             getMetadata: function() {

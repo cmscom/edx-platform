@@ -28,6 +28,7 @@ from xmodule.modulestore import ModuleStoreEnum, PublishState
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.exceptions import ItemNotFoundError, InvalidLocationError
 from xmodule.modulestore.inheritance import own_metadata
+from xmodule.modulestore.draft_and_published import DIRECT_ONLY_CATEGORIES
 from xmodule.x_module import PREVIEW_VIEWS, STUDIO_VIEW, STUDENT_VIEW
 
 from xmodule.course_module import DEFAULT_START_DATE
@@ -375,10 +376,10 @@ def _save_xblock(user, xblock, data=None, children=None, metadata=None, nullout=
     if grader_type is not None:
         result.update(CourseGradingModel.update_section_grader_type(xblock, grader_type, user))
 
-    # If publish is set to 'republish' and this item has previously been published, then this
-    # new item should be republished. This is used by staff locking to ensure that changing the draft
-    # value of the staff lock will also update the published version.
-    if publish == 'republish':
+    # If publish is set to 'republish', this item has previously been published, and this item is not direct only
+    # then this new item should be republished. This is used by staff locking to ensure that changing the draft
+    # value of the staff lock will also update the published version, but only at the unit level.
+    if publish == 'republish' and xblock.category not in DIRECT_ONLY_CATEGORIES:
         published = modulestore().compute_publish_state(xblock) != PublishState.private
         if published:
             publish = 'make_public'
