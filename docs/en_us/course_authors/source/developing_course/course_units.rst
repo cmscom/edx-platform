@@ -228,6 +228,10 @@ Visible to Staff Only
 When you :ref:`hide a unit from students<Hide a Unit from Students>`, the
 unit's publishing status changes to **Visible to Staff Only**.
 
+The publishing status of a unit can be **Visible to Staff Only** if you hid the
+parent :ref:`section<Hide a Section from Students>` or :ref:`subsection<Hide a
+Subsection from Students>` from students.
+
 Students never see a unit with this status, even if it has been published and
 the release date has passed.
 
@@ -441,6 +445,11 @@ You are prompted to confirm that you want to make the unit visible to students.
  When you make a hidden unit that was previously published visible to
  students, the current content in the unit is published. Any changes you made
  to the unit when it was hidden from students will now be visible to students.
+
+.. note::
+ When you make a section or subsection that was previously hidden visible to
+ students, draft content in units is *not* published. Changes you made since
+ last publishing units are not made visible to students.
 
 ********************************
 Delete a Unit

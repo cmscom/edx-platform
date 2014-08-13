@@ -62,9 +62,22 @@ For more information, see :ref:`Unit Publishing Status`.
 Content Hidden from Students
 *****************************
 
-You can :ref:`hide any unit from students<Hide a Unit from Students>`,
-regardless of the parent section and subsection's release dates.
+You can hide content from students. Such content is never visible to students,
+regardless of the release and publishing status.
 
 You might hide a unit from students, for example, when that unit contains an
 answer to a problem in that subsection. After the problem due date, you could
 make the unit with the answer visible.
+
+You can hide content at different levels:
+
+* :ref:`Sections<Hide a Section from Students>`
+* :ref:`Subsections<Hide a Subsection from Students>`
+* :ref:`Units<Hide a Unit from Students>`
+
+.. warning::
+ When you make a previously hidden section or subsection visible to students,
+ not all content in the section or subsection is necessarily made visible to
+ students. If you explicitly set a child subsection or unit to be hidden from
+ students, it remains hidden from students. Unpublished units remain
+ unpublished, and changes to published units remain unpublished.

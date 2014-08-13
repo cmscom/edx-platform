@@ -18,6 +18,7 @@ Section tasks:
 * `Create a Section`_
 * `Change a Section Name`_
 * `Set a Section Release Date`_
+* `Hide a Section from Students`_
 * `Delete a Section`_
 
 
@@ -224,12 +225,49 @@ To set the section release date:
 
 #. Enter the release date and time for the section:
    
-   .. image:: ../Images/section-settings.png
+   .. image:: ../Images/section-settings-release-date.png
     :alt: The section release date settings
 
 #. Click **Save**.
 
 For more information, see :ref:`Release Dates`.
+
+.. _Hide a Section from Students:
+
+********************************
+Hide a Section from Students
+********************************
+
+You can hide all content in a section from students, regardless of the status
+of subsections and units within the section.
+
+To hide a section from students:
+
+#. Click the Settings icon in the section box:
+   
+   .. image:: ../Images/section-settings-box.png
+    :alt: The section settings icon circled
+
+   The **Settings** dialog box opens.
+
+#. Check **Hide from students**.
+
+   .. image:: ../Images/section-settings-hide.png
+    :alt: The section hide from students setting
+
+#. Click **Save**.
+
+Now, no content in the section is visible to students.
+
+To make the section visible to students, repeat these steps and clear the
+**Hide from students** checkbox.
+
+.. warning::
+ When you clear the **Hide from students** checkbox for a section, not all
+ content in the section is necessarily made visible to students. If you
+ explicitly set a subsection or unit to be hidden from students, it remains
+ hidden from students. Unpublished units remain unpublished, and changes to
+ published units remain unpublished.
 
 ********************************
 Delete a Section

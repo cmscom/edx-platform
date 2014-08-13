@@ -240,7 +240,7 @@ To set the subsection release date:
 
 #. Enter the release date and time for the section:
 
-   .. image:: ../Images/subsection-settings.png
+   .. image:: ../Images/subsection-settings-release.png
     :alt: The subsection release date settings
 
 #. Click **Save**.
@@ -278,6 +278,43 @@ To set the assignment type and due date for a subsection:
 #. Click **Save**.
 
 For more information, see :ref:`Establish a Grading Policy`.
+
+.. _Hide a Subsection from Students:
+
+********************************
+Hide a Subsection from Students
+********************************
+
+You can hide all content in a subsection from students, regardless of the
+status of units within the section.
+
+To hide a subsection from students:
+
+#. Click the Settings icon in the subsection box:
+   
+   .. image:: ../Images/subsections-settings-icon.png
+    :alt: The subsection settings icon circled
+
+   The **Settings** dialog box opens.
+
+#. Check **Hide from students**.
+
+   .. image:: ../Images/subsection-settings-hidden.png
+    :alt: The subsection hide from students setting
+
+#. Click **Save**.
+
+Now, no content in the subsection is visible to students.
+
+To make the subection visible to students, repeat these steps and clear the
+**Hide from students** checkbox.
+
+.. warning::
+ When you clear the **Hide from students** checkbox for a subsection, not all
+ content in the subsection is necessarily made visible to students. If you
+ explicitly set unit to be hidden from students, it remains hidden from
+ students. Unpublished units remain unpublished, and changes to published units
+ remain unpublished.
 
 .. _Delete a Subsection:
 
