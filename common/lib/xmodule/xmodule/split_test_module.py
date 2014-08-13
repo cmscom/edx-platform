@@ -356,12 +356,12 @@ class SplitTestModule(SplitTestFields, XModule, StudioEditableModule):
         Return group name corresponding to `vertical`.
         """
         user_partition = self.descriptor.get_selected_partition()
-
-        for group in getattr(user_partition, 'groups', []):
-            group_id = unicode(group.id)
-            child_location = self.group_id_to_child.get(group_id, None)
-            if child_location == vertical.location:
-                return group.name
+        if user_partition:
+            for group in user_partition.groups:
+                group_id = unicode(group.id)
+                child_location = self.group_id_to_child.get(group_id, None)
+                if child_location == vertical.location:
+                    return group.name
 
 
 @XBlock.needs('user_tags')  # pylint: disable=abstract-method
