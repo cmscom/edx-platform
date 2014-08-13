@@ -1325,39 +1325,39 @@ class TestXBlockPublishingInfo(ItemTest):
         xblock.display_name = display_name
         self.store.update_item(xblock, self.user.id)
 
-    def _verify_xblock_info_state(self, xblock_info, xblock_info_field, expected_state, path=None, shouldEqual=True):
+    def _verify_xblock_info_state(self, xblock_info, xblock_info_field, expected_state, path=None, should_equal=True):
         """
         Verify the state of an xblock_info field. If no path is provided then the root item will be verified.
-        If shouldEqual is True, assert that the current state matches the expected state, otherwise assert that they
+        If should_equal is True, assert that the current state matches the expected state, otherwise assert that they
         do not match.
         """
         if path:
             direct_child_xblock_info = self._get_child_xblock_info(xblock_info, path[0])
             remaining_path = path[1:] if len(path) > 1 else None
-            self._verify_xblock_info_state(direct_child_xblock_info, xblock_info_field, expected_state, remaining_path, shouldEqual)
+            self._verify_xblock_info_state(direct_child_xblock_info, xblock_info_field, expected_state, remaining_path, should_equal)
         else:
-            if shouldEqual:
+            if should_equal:
                 self.assertEqual(xblock_info[xblock_info_field], expected_state)
             else:
                 self.assertNotEqual(xblock_info[xblock_info_field], expected_state)
 
-    def _verify_visibility_state(self, xblock_info, expected_state, path=None, shouldEqual=True):
+    def _verify_visibility_state(self, xblock_info, expected_state, path=None, should_equal=True):
         """
         Verify the publish state of an item in the xblock_info.
         """
-        self._verify_xblock_info_state(xblock_info, 'visibility_state', expected_state, path, shouldEqual)
+        self._verify_xblock_info_state(xblock_info, 'visibility_state', expected_state, path, should_equal)
 
-    def _verify_explicit_staff_lock_state(self, xblock_info, expected_state, path=None, shouldEqual=True):
+    def _verify_explicit_staff_lock_state(self, xblock_info, expected_state, path=None, should_equal=True):
         """
         Verify the explicit staff lock state of an item in the xblock_info.
         """
-        self._verify_xblock_info_state(xblock_info, 'has_explicit_staff_lock', expected_state, path, shouldEqual)
+        self._verify_xblock_info_state(xblock_info, 'has_explicit_staff_lock', expected_state, path, should_equal)
 
-    def _verify_staff_lock_from_state(self, xblock_info, expected_state, path=None, shouldEqual=True):
+    def _verify_staff_lock_from_state(self, xblock_info, expected_state, path=None, should_equal=True):
         """
         Verify the staff_lock_from state of an item in the xblock_info.
         """
-        self._verify_xblock_info_state(xblock_info, 'staff_lock_from', expected_state, path, shouldEqual)
+        self._verify_xblock_info_state(xblock_info, 'staff_lock_from', expected_state, path, should_equal)
 
     def test_empty_chapter(self):
         empty_chapter = self._create_child(self.course, 'chapter', "Empty Chapter")
@@ -1465,8 +1465,8 @@ class TestXBlockPublishingInfo(ItemTest):
         self._create_child(chapter, 'sequential', "Test Visible Sequential")
         self._create_child(chapter, 'sequential', "Test Staff Locked Sequential", staff_only=True)
         xblock_info = self._get_xblock_info(chapter.location)
-        self._verify_visibility_state(xblock_info, VisibilityState.staff_only, shouldEqual=False)
-        self._verify_visibility_state(xblock_info, VisibilityState.staff_only, path=[0], shouldEqual=False)
+        self._verify_visibility_state(xblock_info, VisibilityState.staff_only, should_equal=False)
+        self._verify_visibility_state(xblock_info, VisibilityState.staff_only, path=[0], should_equal=False)
         self._verify_visibility_state(xblock_info, VisibilityState.staff_only, path=[1])
 
     def test_staff_only_subsection(self):
@@ -1493,8 +1493,8 @@ class TestXBlockPublishingInfo(ItemTest):
         self._create_child(sequential, 'vertical', "Unit")
         self._create_child(sequential, 'vertical', "Locked Unit", staff_only=True)
         xblock_info = self._get_xblock_info(chapter.location)
-        self._verify_visibility_state(xblock_info, VisibilityState.staff_only, self.FIRST_SUBSECTION_PATH, shouldEqual=False)
-        self._verify_visibility_state(xblock_info, VisibilityState.staff_only, self.FIRST_UNIT_PATH, shouldEqual=False)
+        self._verify_visibility_state(xblock_info, VisibilityState.staff_only, self.FIRST_SUBSECTION_PATH, should_equal=False)
+        self._verify_visibility_state(xblock_info, VisibilityState.staff_only, self.FIRST_UNIT_PATH, should_equal=False)
         self._verify_visibility_state(xblock_info, VisibilityState.staff_only, self.SECOND_UNIT_PATH)
 
     def test_staff_only_unit(self):
