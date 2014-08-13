@@ -362,6 +362,7 @@ class SplitTestModule(SplitTestFields, XModule, StudioEditableModule):
                 child_location = self.group_id_to_child.get(group_id, None)
                 if child_location == vertical.location:
                     return group.name
+        return None
 
 
 @XBlock.needs('user_tags')  # pylint: disable=abstract-method
