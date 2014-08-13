@@ -30,10 +30,33 @@ class ChooseModeView(View):
         from the selection page, parses the response, and then sends user
         to the next step in the flow
     """
-    @method_decorator(login_required)
-    def get(self, request, course_id, error=None):
-        """ Displays the course mode choice page """
 
+    @method_decorator(login_required)
+    def get(self, request, course_id, auto_register=False, error=None):
+        """ Displays the course mode choice page
+
+        TODO: This page was used in an AB-test of auto-registration.
+        Depending on the results of that test, we should remove the
+        `auto_register` flag and make the winning version the default.
+
+        Args:
+            request (`Request`): The Django Request object.
+            course_id (unicode): The slash-separated course key.
+
+        Keyword Args:
+            auto_register (boolean): If True, the user was auto-registered
+                for the course using the default mode.  They should still
+                be given the option to choose their track, but some of the
+                wording on the page should change to indicate that they've
+                already been registered.
+
+            error (unicode): If provided, display this error message
+                on the page.
+
+        Returns:
+            Response
+
+        """
         course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
 
         enrollment_mode, is_active = CourseEnrollment.enrollment_mode_for_user(request.user, course_key)
@@ -41,9 +64,23 @@ class ChooseModeView(View):
         request.session['attempting_upgrade'] = upgrade
 
         # Inactive users always need to re-register
-        # verified and professional users do not need to register or upgrade
-        # registered users who are not trying to upgrade do not need to re-register
-        if is_active and (upgrade is False or enrollment_mode == 'verified' or enrollment_mode == 'professional'):
+        # Verified and professional users do not need to register or upgrade
+        # Registered users who are not trying to upgrade do not need to re-register
+        #
+        # If auto-registration is enabled, then students might already be registered,
+        # but we should still show them the "choose your track" page so they have
+        # the option to enter the verification/payment flow.
+        # TODO: Based on the results of the AB-test, set the default behavior to
+        # either enable or disable auto-registration.
+        go_to_dashboard = (
+            (is_active and not auto_register)
+            and
+            (
+                not upgrade or
+                enrollment_mode in ['verified', 'professional']
+            )
+        )
+        if go_to_dashboard:
             return redirect(reverse('dashboard'))
 
         modes = CourseMode.modes_for_course_dict(course_key)
@@ -59,8 +96,6 @@ class ChooseModeView(View):
                 )
             )
 
-
-
         donation_for_course = request.session.get("donation_for_course", {})
         chosen_price = donation_for_course.get(course_key, None)
 
@@ -75,6 +110,7 @@ class ChooseModeView(View):
             "error": error,
             "upgrade": upgrade,
             "can_audit": "audit" in modes,
+            "autoreg": auto_register
         }
         if "verified" in modes:
             context["suggested_prices"] = [

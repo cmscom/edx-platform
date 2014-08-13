@@ -21,23 +21,38 @@ class CourseModeViewTest(TestCase):
 
     @unittest.skipUnless(settings.ROOT_URLCONF == 'lms.urls', 'Test only valid in lms')
     @ddt.data(
-        # is_active?, enrollment_mode, upgrade?, redirect?
-        (True, 'verified', True, True),     # User is already verified
-        (True, 'verified', False, True),    # User is already verified
-        (True, 'honor', True, False),       # User isn't trying to upgrade
-        (True, 'honor', False, True),       # User is trying to upgrade
-        (True, 'audit', True, False),       # User isn't trying to upgrade
-        (True, 'audit', False, True),       # User is trying to upgrade
-        (False, 'verified', True, False),   # User isn't active
-        (False, 'verified', False, False),  # User isn't active
-        (False, 'honor', True, False),      # User isn't active
-        (False, 'honor', False, False),     # User isn't active
-        (False, 'audit', True, False),      # User isn't active
-        (False, 'audit', False, False),     # User isn't active
+        # is_active?, enrollment_mode, upgrade?, redirect? auto_register?
+        (True, 'verified', True, True, False),     # User is already verified
+        (True, 'verified', False, True, False),    # User is already verified
+        (True, 'honor', True, False, False),       # User isn't trying to upgrade
+        (True, 'honor', False, True, False),       # User is trying to upgrade
+        (True, 'audit', True, False, False),       # User isn't trying to upgrade
+        (True, 'audit', False, True, False),       # User is trying to upgrade
+        (False, 'verified', True, False, False),   # User isn't active
+        (False, 'verified', False, False, False),  # User isn't active
+        (False, 'honor', True, False, False),      # User isn't active
+        (False, 'honor', False, False, False),     # User isn't active
+        (False, 'audit', True, False, False),      # User isn't active
+        (False, 'audit', False, False, False),     # User isn't active
+
+        # When auto-registration is enabled, users may already be
+        # registered when they reach the "choose your track"
+        # page.  In this case, we do NOT want to redirect them
+        # to the dashboard, because we want to give them the option
+        # to enter the verification/payment track.
+        # TODO: based on the outcome of the auto-registration AB test,
+        # either keep these tests or remove them.  In either case,
+        # remove the "auto_register" flag from this test case.
+        (True, 'verified', True, False, True),
+        (True, 'verified', False, False, True),
+        (True, 'honor', True, False, True),
+        (True, 'honor', False, False, True),
+        (True, 'audit', True, False, True),
+        (True, 'audit', False, False, True),
     )
     @ddt.unpack
     @patch('course_modes.views.modulestore', Mock())
-    def test_reregister_redirect(self, is_active, enrollment_mode, upgrade, redirect):
+    def test_reregister_redirect(self, is_active, enrollment_mode, upgrade, redirect, auto_register):
         enrollment = CourseEnrollmentFactory(
             is_active=is_active,
             mode=enrollment_mode,
@@ -54,15 +69,16 @@ class CourseModeViewTest(TestCase):
         else:
             get_params = {}
 
-        response = self.client.get(
-            reverse('course_modes_choose', args=[self.course_id.to_deprecated_string()]),
-            get_params,
-            follow=False,
+        url_name = (
+            'course_modes_choose'
+            if not auto_register
+            else 'course_modes_choose_autoreg'
         )
+        url = reverse(url_name, args=[self.course_id.to_deprecated_string()])
+        response = self.client.get(url, get_params)
 
         if redirect:
-            self.assertEquals(response.status_code, 302)
-            self.assertTrue(response['Location'].endswith(reverse('dashboard')))
+            self.assertRedirects(response, reverse('dashboard'))
         else:
             self.assertEquals(response.status_code, 200)
             # TODO: Fix it so that response.templates works w/ mako templates, and then assert
