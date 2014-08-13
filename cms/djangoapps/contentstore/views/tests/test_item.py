@@ -181,7 +181,7 @@ class GetItem(ItemTest):
 
     def test_split_test_edited(self):
         """
-        Test that rename of group changes display name of child vertical.
+        Test that rename of a group changes display name of child vertical.
         """
         self.course.user_partitions = [
             UserPartition(
@@ -866,7 +866,6 @@ class TestEditSplitModule(ItemTest):
         self.assertEqual(2, len(split_test.group_id_to_child))
         self.assertEqual(vertical_0.location, split_test.group_id_to_child['0'])
         self.assertEqual(vertical_1.location, split_test.group_id_to_child['1'])
-
 
     def test_change_user_partition_id(self):
         """
