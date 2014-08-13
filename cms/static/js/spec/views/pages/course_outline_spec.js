@@ -441,20 +441,20 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
 
                 it('publish modal displays a list of unpublished subsections and units for the Section', function () {
                     var mockCourseJSON = createMockCourseJSON({}, [
-                            createMockSectionJSON({has_changes: true}, [
-                                createMockSubsectionJSON({has_changes: true}, [
+                            createMockSectionJSON({visibility_state: 'needs_attention'}, [
+                                createMockSubsectionJSON({visibility_state: 'needs_attention'}, [
                                     createMockVerticalJSON(),
-                                    createMockVerticalJSON({has_changes: true}),
-                                    createMockVerticalJSON({published: false})
+                                    createMockVerticalJSON({visibility_state: 'needs_attention'}),
+                                    createMockVerticalJSON({visibility_state: 'needs_attention'})
                                 ]),
-                                createMockSubsectionJSON({has_changes: true}, [
-                                    createMockVerticalJSON({has_changes: true})
+                                createMockSubsectionJSON({visibility_state: 'needs_attention'}, [
+                                    createMockVerticalJSON({visibility_state: 'needs_attention'})
                                 ]),
                                 createMockSubsectionJSON({}, [createMockVerticalJSON])
                             ]),
-                            createMockSectionJSON({has_changes: true}, [
-                                createMockSubsectionJSON({has_changes: true}, [
-                                    createMockVerticalJSON({has_changes: true}),
+                            createMockSectionJSON({visibility_state: 'needs_attention'}, [
+                                createMockSubsectionJSON({visibility_state: 'needs_attention'}, [
+                                    createMockVerticalJSON({visibility_state: 'needs_attention'}),
                                 ])
                             ])
                         ]), modalWindow;
@@ -645,14 +645,14 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
 
                 it('publish modal displays a list of unpublished units for the Subsection', function () {
                     var mockCourseJSON = createMockCourseJSON({}, [
-                            createMockSectionJSON({has_changes: true}, [
-                                createMockSubsectionJSON({has_changes: true}, [
+                            createMockSectionJSON({visibility_state: 'needs_attention'}, [
+                                createMockSubsectionJSON({visibility_state: 'needs_attention'}, [
                                     createMockVerticalJSON(),
-                                    createMockVerticalJSON({has_changes: true}),
-                                    createMockVerticalJSON({published: false})
+                                    createMockVerticalJSON({visibility_state: 'needs_attention'}),
+                                    createMockVerticalJSON({visibility_state: 'needs_attention'})
                                 ]),
-                                createMockSubsectionJSON({has_changes: true}, [
-                                    createMockVerticalJSON({has_changes: true})
+                                createMockSubsectionJSON({visibility_state: 'needs_attention'}, [
+                                    createMockVerticalJSON({visibility_state: 'needs_attention'})
                                 ]),
                                 createMockSubsectionJSON({}, [createMockVerticalJSON])
                             ])
