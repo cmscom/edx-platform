@@ -359,7 +359,7 @@ class StaffLockSourceTest(CourseTestCase):
         """Helper to verify that the staff lock source of a given item matches the expected source"""
         source = utils.find_staff_lock_source(item)
         self.assertEqual(source.location, expected_source.location)
-        self.assertEqual(source.visible_to_staff_only, expected_source.visible_to_staff_only)
+        self.assertTrue(source.visible_to_staff_only)
 
     def test_chapter_source_for_vertical(self):
         """Tests a vertical's staff lock being set by its chapter"""
