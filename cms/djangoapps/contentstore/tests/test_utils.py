@@ -390,6 +390,11 @@ class StaffLockSourceTest(StaffLockTest):
         """Tests that a orphaned xblock has no staff lock source"""
         self.assertIsNone(utils.find_staff_lock_source(self.orphan))
 
+    def test_no_source_for_vertical(self):
+        """Tests a vertical with no staff lock set anywhere"""
+        self._update_staff_locks(False, False, False)
+        self.assertIsNone(utils.find_staff_lock_source(self.orphan))
+
 
 class InheritedStaffLockTest(StaffLockTest):
     """Tests for determining if an xblock inherits a staff lock."""
