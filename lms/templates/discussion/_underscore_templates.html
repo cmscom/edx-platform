@@ -138,6 +138,9 @@
         ${'<%= author_display %>'}
         <p class="posted-details">
             <span class="timeago" title="${'<%= created_at %>'}">${'<%= created_at %>'}</span>
+            <span class="post-labels">
+                <span class="post-label-reported"><i class="icon icon-flag"></i>${_("Reported")}</span>
+            </span>
             <%
             js_block = u"""
                 interpolate(
@@ -210,6 +213,9 @@
            %>
     <p class="posted-details">
     ${'<%='}${js_block}${'%>'}
+      <span class="post-labels">
+        <span class="post-label-reported"><i class="icon icon-flag"></i>${_("Reported")}</span>
+      </span>
     </p>
   </div>
 </script>
