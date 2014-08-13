@@ -1,8 +1,8 @@
 ############################
-Contributing to edx-platform
+Contributing to edX
 ############################
 
-Contributions to edx-platform are very welcome, and strongly encouraged! We've
+Contributions to edX are very welcome, and strongly encouraged! We've
 put together `some documentation that describes our contribution process`_,
 but here's a step-by-step guide that should help you get started.
 
