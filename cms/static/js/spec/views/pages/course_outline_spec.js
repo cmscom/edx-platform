@@ -136,7 +136,7 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
 
                 it('can be published', function() {
                     var mockCourseJSON = getMockCourseJSON({
-                        has_changes: true
+                        visibility_state: 'needs_attention'
                     });
                     createCourseOutlinePageAndShowUnit(this, mockCourseJSON);
                     getItemHeaders(type).find('.publish-button').click();
@@ -149,38 +149,6 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     create_sinon.expectJsonRequest(requests, 'GET', '/xblock/outline/mock-section');
                 });
 
-                it('should show publish button if it is not published and not changed', function() {
-                    var mockCourseJSON = getMockCourseJSON({
-                        has_changes: false,
-                        published: false
-                    });
-                    verifyPublishButton(this, mockCourseJSON);
-                });
-
-                it('should show publish button if it is published and changed', function() {
-                    var mockCourseJSON = getMockCourseJSON({
-                        has_changes: true,
-                        published: true
-                    });
-                    verifyPublishButton(this, mockCourseJSON);
-                });
-
-                it('should show publish button if it is not published, but changed', function() {
-                    var mockCourseJSON = getMockCourseJSON({
-                        has_changes: true,
-                        published: false
-                    });
-                    verifyPublishButton(this, mockCourseJSON);
-                });
-
-                it('should hide publish button if it is not changed, but published', function() {
-                    var mockCourseJSON = getMockCourseJSON({
-                        has_changes: false,
-                        published: true
-                    });
-                    createCourseOutlinePageAndShowUnit(this, mockCourseJSON);
-                    expect(getItemHeaders(type).find('.publish-button')).not.toExist();
-                });
             };
 
             beforeEach(function () {
