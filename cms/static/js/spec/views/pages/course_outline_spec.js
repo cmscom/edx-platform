@@ -713,7 +713,6 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     create_sinon.expectJsonRequest(requests, 'GET', '/xblock/outline/mock-section');
                 });
 
-
                 it('has a link to the unit page', function() {
                     var unitAnchor;
                     createCourseOutlinePage(this, mockCourseJSON);

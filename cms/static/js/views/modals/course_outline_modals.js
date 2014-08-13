@@ -108,11 +108,6 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
             'click .action-publish': 'save'
         },
 
-        initialize: function() {
-            CourseOutlineXBlockModal.prototype.initialize.call(this);
-            this.events = _.extend({}, BaseModal.prototype.events, this.events);
-        },
-
         getTitle: function () {
             return interpolate(
                 gettext('Publish %(display_name)s'),
@@ -123,8 +118,8 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         getIntroductionMessage: function () {
             return interpolate(
                 gettext('Publish all unpublished changes for this %(item)s?'),
-                {item: this.options.xblockType}, true
-                );
+                { item: this.options.xblockType }, true
+            );
         },
 
         addActionButtons: function() {
