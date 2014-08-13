@@ -392,7 +392,7 @@ define(["jquery", "underscore", "underscore.string", "js/spec_helpers/create_sin
                         containerPage.$('.action-staff-lock').click();
 
                         // If removing explicit staff lock with no implicit staff lock, click 'Yes' to confirm
-                        if (!isStaffOnly && !containerPage.model.get('staff_lock_from')) {
+                        if (!isStaffOnly && !containerPage.model.get('has_inherited_staff_lock')) {
                             edit_helpers.confirmPrompt(promptSpy);
                         }
 

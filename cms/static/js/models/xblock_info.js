@@ -108,6 +108,10 @@ function(Backbone, _, str, ModuleUtils) {
              */
             'has_explicit_staff_lock': null,
             /**
+             * True iff this xblock inherits a staff lock from its ancestors.
+             */
+            'has_inherited_staff_lock': null,
+            /**
              * The xblock which is determining the staff lock value. For instance, for a unit,
              * this will either be the parent subsection or the grandparent section.
              * This can be null if the xblock has no inherited staff lock.

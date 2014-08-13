@@ -38,7 +38,8 @@ from util.date_utils import get_default_time_display
 from util.json_request import expect_json, JsonResponse
 
 from .access import has_course_access
-from contentstore.utils import find_release_date_source, find_staff_lock_source, is_currently_visible_to_students
+from contentstore.utils import find_release_date_source, find_staff_lock_source, is_currently_visible_to_students, \
+    has_inherited_staff_lock
 from contentstore.views.helpers import is_unit, xblock_studio_url, xblock_primary_child_category, \
     xblock_type_display_name, get_parent_xblock
 from contentstore.views.preview import get_preview_fragment
@@ -685,8 +686,10 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
             xblock_info["release_date_from"] = _get_release_date_from(xblock)
         if visibility_state == VisibilityState.staff_only:
             xblock_info["staff_lock_from"] = _get_staff_lock_from(xblock)
+            xblock_info["has_inherited_staff_lock"] = has_inherited_staff_lock(xblock)
         else:
             xblock_info["staff_lock_from"] = None
+            xblock_info["has_inherited_staff_lock"] = False
     if course_outline:
         if xblock_info["has_explicit_staff_lock"]:
             xblock_info["staff_only_message"] = True

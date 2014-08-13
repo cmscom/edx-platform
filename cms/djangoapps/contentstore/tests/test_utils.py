@@ -317,11 +317,11 @@ class ReleaseDateSourceTest(CourseTestCase):
         self._verify_release_date_source(self.sequential, self.sequential)
 
 
-class StaffLockSourceTest(CourseTestCase):
-    """Tests for finding the source of an xblock's staff lock."""
+class StaffLockTest(CourseTestCase):
+    """Base class for testing staff lock functions."""
 
     def setUp(self):
-        super(StaffLockSourceTest, self).setUp()
+        super(StaffLockTest, self).setUp()
 
         self.chapter = ItemFactory.create(category='chapter', parent_location=self.course.location)
         self.sequential = ItemFactory.create(category='sequential', parent_location=self.chapter.location)
@@ -355,6 +355,10 @@ class StaffLockSourceTest(CourseTestCase):
         self.sequential = self._set_staff_lock(self.sequential, sequential_locked)
         self.vertical = self._set_staff_lock(self.vertical, vertical_locked)
 
+
+class StaffLockSourceTest(StaffLockTest):
+    """Tests for finding the source of an xblock's staff lock."""
+
     def _verify_staff_lock_source(self, item, expected_source):
         """Helper to verify that the staff lock source of a given item matches the expected source"""
         source = utils.find_staff_lock_source(item)
@@ -385,3 +389,32 @@ class StaffLockSourceTest(CourseTestCase):
     def test_orphan_has_no_source(self):
         """Tests that a orphaned xblock has no staff lock source"""
         self.assertIsNone(utils.find_staff_lock_source(self.orphan))
+
+
+class InheritedStaffLockTest(StaffLockTest):
+    """Tests for determining if an xblock inherits a staff lock."""
+
+    def test_no_inheritance(self):
+        """Tests that a locked or unlocked vertical with no locked ancestors does not have an inherited lock"""
+        self._update_staff_locks(False, False, False)
+        self.assertFalse(utils.has_inherited_staff_lock(self.vertical))
+        self._update_staff_locks(False, False, True)
+        self.assertFalse(utils.has_inherited_staff_lock(self.vertical))
+
+    def test_inheritance_in_locked_section(self):
+        """Tests that a locked or unlocked vertical in a locked section has an inherited lock"""
+        self._update_staff_locks(True, False, False)
+        self.assertTrue(utils.has_inherited_staff_lock(self.vertical))
+        self._update_staff_locks(True, False, True)
+        self.assertTrue(utils.has_inherited_staff_lock(self.vertical))
+
+    def test_inheritance_in_locked_subsection(self):
+        """Tests that a locked or unlocked vertical in a locked subsection has an inherited lock"""
+        self._update_staff_locks(False, True, False)
+        self.assertTrue(utils.has_inherited_staff_lock(self.vertical))
+        self._update_staff_locks(False, True, True)
+        self.assertTrue(utils.has_inherited_staff_lock(self.vertical))
+
+    def test_no_inheritance_for_orphan(self):
+        """Tests that an orphaned xblock does not inherit staff lock"""
+        self.assertFalse(utils.has_inherited_staff_lock(self.orphan))

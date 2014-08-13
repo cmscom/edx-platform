@@ -220,6 +220,18 @@ def find_staff_lock_source(xblock):
     return find_staff_lock_source(parent)
 
 
+def has_inherited_staff_lock(xblock):
+    """
+    Returns True iff xblock inherits a staff lock from its ancestors.
+    """
+    parent_location = modulestore().get_parent_location(xblock.location,
+                                                        revision=ModuleStoreEnum.RevisionOption.draft_preferred)
+    if not parent_location:
+        return False
+    parent = modulestore().get_item(parent_location)
+    return parent.visible_to_staff_only
+
+
 def add_extra_panel_tab(tab_type, course):
     """
     Used to add the panel tab to a course if it does not exist.

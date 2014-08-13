@@ -163,13 +163,13 @@ define(["jquery", "underscore", "gettext", "js/views/baseview", "js/views/utils/
             },
 
             toggleStaffLock: function (e) {
-                var xblockInfo = this.model, self=this, enableStaffLock, staffLockFrom,
+                var xblockInfo = this.model, self=this, enableStaffLock, hasInheritedStaffLock,
                     saveAndPublishStaffLock, revertCheckBox;
                 if (e && e.preventDefault) {
                     e.preventDefault();
                 }
                 enableStaffLock = !xblockInfo.get('has_explicit_staff_lock');
-                staffLockFrom = xblockInfo.get('staff_lock_from');
+                hasInheritedStaffLock = xblockInfo.get('has_inherited_staff_lock');
 
                 revertCheckBox = function() {
                     self.checkStaffLock(!enableStaffLock);
@@ -195,7 +195,7 @@ define(["jquery", "underscore", "gettext", "js/views/baseview", "js/views/utils/
                 if (enableStaffLock) {
                     ViewUtils.runOperationShowingMessage(gettext('Hiding Unit from Students&hellip;'),
                         _.bind(saveAndPublishStaffLock, self));
-                } else if (staffLockFrom) {
+                } else if (hasInheritedStaffLock) {
                     ViewUtils.runOperationShowingMessage(gettext('Removing Explicit Staff Lock&hellip;'),
                         _.bind(saveAndPublishStaffLock, self));
                 } else {
