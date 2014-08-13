@@ -231,32 +231,6 @@
   display: block;
 }
 
-%forum-nav-thread-label {
-  &:last-child {
-    margin-right: 0;
-  }
-}
-
-.forum-nav-thread-label-pinned {
-  @extend .forum-post-label-pinned;
-  @extend %forum-nav-thread-label;
-}
-
-.forum-nav-thread-label-following {
-  @extend .forum-post-label-following;
-  @extend %forum-nav-thread-label;
-}
-
-.forum-nav-thread-label-staff {
-  @extend .forum-post-label-staff;
-  @extend %forum-nav-thread-label;
-}
-
-.forum-nav-thread-label-community-ta {
-  @extend .forum-post-label-community-ta;
-  @extend %forum-nav-thread-label;
-}
-
 %forum-nav-thread-wrapper-2-content {
   @include font-size(11);
   display: inline-block;

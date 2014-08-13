@@ -244,30 +244,6 @@ body.discussion {
     font-size: 11px;
   }
 
-  .staff-label {
-    margin-left: ($baseline/4);
-    padding: 0 ($baseline/5);
-    border-radius: 2px;
-    background: #009FE2;
-    font-size: 9px;
-    font-weight: 700;
-    font-style: normal;
-    color: white;
-    text-transform: uppercase;
-  }
-
-  .community-ta-label{
-    margin-left: ($baseline/10);
-    padding: 0 ($baseline/5);
-    border-radius: 2px;
-    background: $forum-color-community-ta;
-    font-size: 9px;
-    font-weight: 700;
-    font-style: normal;
-    color: white;
-    text-transform: uppercase;
-  }
-
   .main-article.new {
     display: none;
     padding: ($baseline*2.5);
@@ -600,31 +576,6 @@ body.discussion {
   .discussion-post {
     padding-bottom: $baseline !important;
   }
-}
-
-
-.forum-post-label-pinned {
-  @include forum-post-label($forum-color-pinned);
-}
-
-.forum-post-label-following {
-  @include forum-post-label($forum-color-following);
-}
-
-.forum-post-label-reported {
-  @include forum-post-label($forum-color-reported);
-}
-
-.forum-post-label-closed {
-  @include forum-post-label($forum-color-closed);
-}
-
-.forum-post-label-staff {
-  @include forum-post-label($forum-color-staff);
-}
-
-.forum-post-label-community-ta {
-  @include forum-post-label($forum-color-community-ta);
 }
 
 // ====================

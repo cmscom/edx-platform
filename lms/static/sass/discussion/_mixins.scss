@@ -133,4 +133,19 @@
     margin-right: ($baseline/5);
   }
 
+  &:last-child {
+    margin-right: 0;
+  }
+}
+
+@mixin forum-author-label($color) {
+  margin-left: ($baseline/4);
+  padding: 0 ($baseline/5);
+  border-radius: 2px;
+  background: $color;
+  font-size: 9px;
+  font-weight: 700;
+  font-style: normal;
+  color: white;
+  text-transform: uppercase;
 }

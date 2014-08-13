@@ -55,15 +55,15 @@
               ## Translators: post_type describes the kind of post this is
               ## (e.g. "question" or "discussion"); time_ago is how much time
               ## has passed since the post was created (e.g. "4 hours ago")
-              ${"{post_type} posted {time_ago} by {author_display}".format(
+              ${"{post_type} posted {time_ago} by {author}".format(
                   post_type="<%- thread_type %>",
                   time_ago="<span class='timeago' title='<%- created_at %>'><%- created_at %></span>",
-                  author_display="<%= author_display %>"
+                  author="<%= author_display %>"
               )}
-              <span class="forum-post-labels-secondary">
-                  <span class="forum-post-label-pinned" style="display: none"><i class="icon icon-pushpin"></i>${_("Pinned")}</span>
-                  <span class="forum-post-label-reported" style="display: none"><i class="icon icon-flag"></i>${_("Reported")}</span>
-                  <span class="forum-post-label-closed" style="display: none"><i class="icon icon-lock"></i>${_("Closed")}</span>
+              <span class="post-labels">
+                  <span class="post-label-pinned"><i class="icon icon-pushpin"></i>${_("Pinned")}</span>
+                  <span class="post-label-reported"><i class="icon icon-flag"></i>${_("Reported")}</span>
+                  <span class="post-label-closed"><i class="icon icon-lock"></i>${_("Closed")}</span>
               </span>
           </p>
       </header>
@@ -267,16 +267,16 @@
         js_block = u"""
         var labels = "";
         if (pinned) {{
-            labels += '<li class="forum-nav-thread-label-pinned"><i class="icon icon-pushpin"></i>{pinned_text}</li> ';
+            labels += '<li class="post-label-pinned"><i class="icon icon-pushpin"></i>{pinned_text}</li> ';
         }}
         if (typeof(subscribed) != "undefined" && subscribed) {{
-            labels += '<li class="forum-nav-thread-label-following"><i class="icon icon-star"></i>{following_text}</li> ';
+            labels += '<li class="post-label-following"><i class="icon icon-star"></i>{following_text}</li> ';
         }}
         if (staff_authored) {{
-            labels += '<li class="forum-nav-thread-label-staff"><i class="icon icon-user"></i>{staff_text}</li> ';
+            labels += '<li class="post-label-by-staff"><i class="icon icon-user"></i>{staff_text}</li> ';
         }}
         if (community_ta_authored) {{
-            labels += '<li class="forum-nav-thread-label-community-ta"><i class="icon icon-user"></i>{community_ta_text}</li> ';
+            labels += '<li class="post-label-by-community-ta"><i class="icon icon-user"></i>{community_ta_text}</li> ';
         }}
         if (labels != "") {{
             print('<ul class="forum-nav-thread-labels">' + labels + '</ul>');
@@ -627,9 +627,9 @@ ${secondaryAction("delete", "remove", _("Delete"))}
     ${"<% if (username) { %>"}
     <a href="${'<%- user_url %>'}">${'<%- username %>'}</a>
         ${"<% if (community_ta_authored) { %>"}
-        <span class="community-ta-label">${_("Community TA")}</span>
+        <span class="author-label-community-ta">${_("Community TA")}</span>
         ${"<% } else if (staff_authored) { %>"}
-        <span class="staff-label">${_("Staff")}</span>
+        <span class="author-label-staff">${_("Staff")}</span>
         ${"<% } %>"}
     ${"<% } else { %>"}
     ${_('anonymous') | h}
