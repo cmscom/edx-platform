@@ -1301,6 +1301,17 @@ class TestXBlockPublishingInfo(ItemTest):
             include_children_predicate=ALWAYS,
         )
 
+    def _get_xblock_outline_info(self, location):
+        """
+        Returns the xblock info for the specified location as neeeded for the course outline page.
+        """
+        return create_xblock_info(
+            modulestore().get_item(location),
+            include_child_info=True,
+            include_children_predicate=ALWAYS,
+            course_outline=True
+        )
+
     def _set_release_date(self, location, start):
         """
         Sets the release date for the specified xblock.
@@ -1340,6 +1351,12 @@ class TestXBlockPublishingInfo(ItemTest):
                 self.assertEqual(xblock_info[xblock_info_field], expected_state)
             else:
                 self.assertNotEqual(xblock_info[xblock_info_field], expected_state)
+
+    def _verify_has_staff_only_message(self, xblock_info, expected_state, path=None):
+        """
+        Verify the staff_only_message field of xblock_info.
+        """
+        self._verify_xblock_info_state(xblock_info, 'staff_only_message', expected_state, path)
 
     def _verify_visibility_state(self, xblock_info, expected_state, path=None, should_equal=True):
         """
@@ -1536,3 +1553,27 @@ class TestXBlockPublishingInfo(ItemTest):
         self._verify_visibility_state(xblock_info, VisibilityState.live, path=self.FIRST_SUBSECTION_PATH)
         self._verify_visibility_state(xblock_info, VisibilityState.live, path=self.FIRST_UNIT_PATH)
         self._verify_visibility_state(xblock_info, VisibilityState.staff_only, path=self.SECOND_UNIT_PATH)
+
+    def test_locked_section_staff_only_message(self):
+        """
+        Tests that a locked section has a staff only message and its descendants do not.
+        """
+        chapter = self._create_child(self.course, 'chapter', "Test Chapter", staff_only=True)
+        sequential = self._create_child(chapter, 'sequential', "Test Sequential")
+        self._create_child(sequential, 'vertical', "Unit")
+        xblock_info = self._get_xblock_outline_info(chapter.location)
+        self._verify_has_staff_only_message(xblock_info, True)
+        self._verify_has_staff_only_message(xblock_info, False, path=self.FIRST_SUBSECTION_PATH)
+        self._verify_has_staff_only_message(xblock_info, False, path=self.FIRST_UNIT_PATH)
+
+    def test_locked_unit_staff_only_message(self):
+        """
+        Tests that a lone locked unit has a staff only message along with its ancestors.
+        """
+        chapter = self._create_child(self.course, 'chapter', "Test Chapter")
+        sequential = self._create_child(chapter, 'sequential', "Test Sequential")
+        self._create_child(sequential, 'vertical', "Unit", staff_only=True)
+        xblock_info = self._get_xblock_outline_info(chapter.location)
+        self._verify_has_staff_only_message(xblock_info, True)
+        self._verify_has_staff_only_message(xblock_info, True, path=self.FIRST_SUBSECTION_PATH)
+        self._verify_has_staff_only_message(xblock_info, True, path=self.FIRST_UNIT_PATH)
