@@ -1206,7 +1206,36 @@ class MongoModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase):
                         value[key] = subvalue.to_deprecated_string()
         return jsonfields
 
-    def _get_raw_parent_location(self, location, revision=ModuleStoreEnum.RevisionOption.published_only):
+    def _get_non_orphan_parents(self, location, parents, orphans, revision):
+        """
+        Extract non orphan parents by traversing the list of possible parents and remove current location
+        from orphan parents to avoid parents calculation overhead next time.
+        """
+        non_orphan_parents = []
+        for parent in parents:
+            original_parent_loc = Location._from_deprecated_son(parent['_id'], location.course_key.run)
+
+            ancestor = original_parent_loc
+            while ancestor is not None:
+                parent_loc = ancestor
+                ancestor = self.get_parent_location(parent_loc, revision, orphans=orphans)
+                if ancestor is None:
+                    if parent_loc not in orphans:
+                        non_orphan_parents.append(original_parent_loc)
+                    else:
+                        # remove location from children of adjacent orphan parent
+                        self.collection.update(
+                            {'_id': original_parent_loc.to_deprecated_son()},
+                            {'$pull': {'definition.children': location.to_deprecated_string()}},
+                            multi=False,
+                            upsert=True,
+                            safe=self.collection.safe
+                        )
+
+        return non_orphan_parents
+
+
+    def _get_raw_parent_location(self, location, revision=ModuleStoreEnum.RevisionOption.published_only, orphans=None):
         '''
         Helper for get_parent_location that finds the location that is the parent of this location in this course,
         but does NOT return a version agnostic location.
@@ -1232,10 +1261,21 @@ class MongoModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase):
 
         if revision == ModuleStoreEnum.RevisionOption.published_only:
             if parents.count() > 1:
-                # should never have multiple PUBLISHED parents
-                raise ReferentialIntegrityError(
-                    u"{} parents claim {}".format(parents.count(), location)
-                )
+                if orphans is None:
+                    orphans = self.get_orphans(location.course_key)
+
+                non_orphan_parents = self._get_non_orphan_parents(location, parents, orphans, revision)
+                if len(non_orphan_parents) == 0:
+                    # no actual parent found
+                    return None
+
+                if len(non_orphan_parents) > 1:
+                    # should never have multiple PUBLISHED parents
+                    raise ReferentialIntegrityError(
+                        u"{} parents claim {}".format(parents.count(), location)
+                    )
+                else:
+                    return non_orphan_parents[0]
             else:
                 # return the single PUBLISHED parent
                 return Location._from_deprecated_son(parents[0]['_id'], location.course_key.run)
@@ -1249,7 +1289,7 @@ class MongoModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase):
             # don't disclose revision outside modulestore
             return Location._from_deprecated_son(found_id, location.course_key.run)
 
-    def get_parent_location(self, location, revision=ModuleStoreEnum.RevisionOption.published_only, **kwargs):
+    def get_parent_location(self, location, revision=ModuleStoreEnum.RevisionOption.published_only, orphans=None, **kwargs):
         '''
         Find the location that is the parent of this location in this course.
 
@@ -1264,7 +1304,7 @@ class MongoModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase):
                         preferring DRAFT, if parent(s) exists,
                         else returns None
         '''
-        parent = self._get_raw_parent_location(location, revision)
+        parent = self._get_raw_parent_location(location, revision, orphans)
         if parent:
             return as_published(parent)
         return None
