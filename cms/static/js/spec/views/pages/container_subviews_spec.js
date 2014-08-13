@@ -416,7 +416,7 @@ define(["jquery", "underscore", "underscore.string", "js/spec_helpers/create_sin
                         }
                         create_sinon.respondWithJson(requests, createXBlockInfo({
                             published: containerPage.model.get('published'),
-                            has_explicit_staff_lock: isStaffOnly? true : false,
+                            has_explicit_staff_lock: isStaffOnly,
                             visibility_state: newVisibilityState,
                             release_date: "Jul 02, 2000 at 14:20 UTC"
                         }));
@@ -429,6 +429,8 @@ define(["jquery", "underscore", "underscore.string", "js/spec_helpers/create_sin
                         } else {
                             expect(containerPage.$('.wrapper-visibility .copy').text().trim()).toBe('Staff and Students');
                             expect(containerPage.$(bitPublishingCss)).not.toHaveClass(staffOnlyClass);
+                            verifyExplicitStaffOnly(false);
+                            verifyImplicitStaffOnly(false);
                         }
                     };
 
@@ -450,7 +452,6 @@ define(["jquery", "underscore", "underscore.string", "js/spec_helpers/create_sin
 
                     it("is initially shown to all", function() {
                         renderContainerPage(this, mockContainerXBlockHtml);
-                        verifyExplicitStaffOnly(false);
                         verifyStaffOnly(false);
                     });
 
@@ -509,8 +510,6 @@ define(["jquery", "underscore", "underscore.string", "js/spec_helpers/create_sin
                             has_explicit_staff_lock: true
                         });
                         requestStaffOnly(false);
-                        verifyExplicitStaffOnly(false);
-                        verifyImplicitStaffOnly(false);
                         verifyStaffOnly(false);
                     });
 
@@ -549,7 +548,6 @@ define(["jquery", "underscore", "underscore.string", "js/spec_helpers/create_sin
                         requestCount = requests.length;
                         create_sinon.respondWithError(requests);
                         expect(requests.length).toBe(requestCount);
-                        verifyExplicitStaffOnly(false);
                         verifyStaffOnly(false);
                     });
                 });
