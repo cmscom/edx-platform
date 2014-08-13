@@ -419,7 +419,7 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                 };
 
                 // Contains hard-coded dates because dates are presented in different formats.
-                var mockServerValuesJson = $.extend(true, {},
+                mockServerValuesJson = $.extend(true, {},
                     createMockSectionJSON('mock-section', 'Mock Section', [
                         createMockSubsectionJSON('mock-subsection', 'Mock Subsection', [{
                             id: 'mock-unit',
@@ -444,7 +444,8 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                                 start: "2014-07-09T00:00:00Z",
                                 format: "Lab",
                                 due: "2014-07-10T00:00:00Z",
-                                has_explicit_staff_lock: true
+                                has_explicit_staff_lock: true,
+                                staff_only_message: true
                             }]
                         }
                     }
@@ -542,7 +543,7 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     expect($("#start_date").val()).toBe('7/9/2014');
                     expect($("#due_date").val()).toBe('7/10/2014');
                     expect($("#grading_type").val()).toBe('Lab');
-                    expect($("#staff_lock").is(":checked")).toBeTrue();
+                    expect($("#staff_lock").is(":checked")).toBe(true);
                 });
 
                 it('release date, due date, grading type, and staff lock can be cleared.', function() {
@@ -565,7 +566,7 @@ define(["jquery", "js/spec_helpers/create_sinon", "js/spec_helpers/view_helpers"
                     expect($("#start_date").val()).toBe('7/9/2014');
                     expect($("#due_date").val()).toBe('7/10/2014');
                     expect($("#grading_type").val()).toBe('Lab');
-                    expect($("#staff_lock").is(":checked")).toBeTrue();
+                    expect($("#staff_lock").is(":checked")).toBe(true);
 
                     $(".edit-outline-item-modal .scheduled-date-input .action-clear").click();
                     $(".edit-outline-item-modal .due-date-input .action-clear").click();
