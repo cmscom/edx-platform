@@ -370,6 +370,17 @@ class StaffLockSourceTest(CourseTestCase):
         """Tests a vertical's staff lock being set by its sequential"""
         self._update_staff_locks(True, True, False)
         self._verify_staff_lock_source(self.vertical, self.sequential)
+        self._update_staff_locks(False, True, False)
+        self._verify_staff_lock_source(self.vertical, self.sequential)
+
+    def test_vertical_source_for_vertical(self):
+        """Tests a vertical's staff lock being set by its sequential"""
+        self._update_staff_locks(True, True, True)
+        self._verify_staff_lock_source(self.vertical, self.vertical)
+        self._update_staff_locks(False, True, True)
+        self._verify_staff_lock_source(self.vertical, self.vertical)
+        self._update_staff_locks(False, False, True)
+        self._verify_staff_lock_source(self.vertical, self.vertical)
 
     def test_orphan_has_no_source(self):
         """Tests that a orphaned xblock has no staff lock source"""

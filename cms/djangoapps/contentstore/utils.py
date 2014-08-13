@@ -214,7 +214,7 @@ def find_staff_lock_source(xblock):
                                                         revision=ModuleStoreEnum.RevisionOption.draft_preferred)
     # Orphaned xblocks set their own staff lock
     if not parent_location:
-        return xblock
+        return None
 
     parent = modulestore().get_item(parent_location)
     return find_staff_lock_source(parent)
