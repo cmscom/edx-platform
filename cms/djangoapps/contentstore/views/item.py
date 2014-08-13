@@ -668,7 +668,6 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
         "due": xblock.fields['due'].to_json(xblock.due),
         "format": xblock.format,
         "course_graders": json.dumps([grader.get('type') for grader in graders]),
-        "has_changes": is_unit_with_changes,
     }
     if data is not None:
         xblock_info["data"] = data
@@ -678,13 +677,14 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
         xblock_info['ancestor_info'] = _create_xblock_ancestor_info(xblock, course_outline)
     if child_info:
         xblock_info['child_info'] = child_info
-    # Currently, 'edited_by', 'published_by', and 'release_date_from' are only used by the
+    # Currently, 'edited_by', 'published_by', and 'release_date_from', and 'has_changes' are only used by the
     # container page when rendering a unit. Since they are expensive to compute, only include them for units
     # that are not being rendered on the course outline.
     if is_xblock_unit and not course_outline:
         xblock_info["edited_by"] = safe_get_username(xblock.subtree_edited_by)
         xblock_info["published_by"] = safe_get_username(xblock.published_by)
         xblock_info["currently_visible_to_students"] = is_currently_visible_to_students(xblock)
+        xblock_info['has_changes'] = is_unit_with_changes
         if release_date:
             xblock_info["release_date_from"] = _get_release_date_from(xblock)
 
