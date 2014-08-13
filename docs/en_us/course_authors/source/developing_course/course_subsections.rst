@@ -19,6 +19,7 @@ Subsection tasks:
 * `Change a Subsection Name`_
 * `Set a Subsection Release Date`_
 * `Set the Assignment Type and Due Date for a Subsection`_
+* `Hide a Subsection from Students`_
 * `Delete a Subsection`_
 
 
