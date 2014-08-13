@@ -68,7 +68,7 @@ var visibleToStaffOnly = visibilityState === 'staff_only';
         <% if (visibleToStaffOnly) { %>
             <p class="copy">
                 <%= gettext("Staff Only") %>
-                <% if (staffLockFrom) { %>
+                <% if (!hasExplicitStaffLock) { %>
                     <span class="inherited-from">
                         <%= interpolate(gettext("with %(section_or_subsection)s"),{ section_or_subsection: staffLockFrom }, true) %>
                     </span>

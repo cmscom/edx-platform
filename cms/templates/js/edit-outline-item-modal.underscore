@@ -1,10 +1,8 @@
 <div class="xblock-editor" data-locator="<%= xblockInfo.get('id') %>" data-course-key="<%= xblockInfo.get('courseKey') %>">
     <div class="message modal-introduction">
-        <% if (xblockInfo.isChapter() || xblockInfo.isSequential() || xblockInfo.isVertical()) { %>
-          <p>
-            <%= interpolate(gettext("Change the settings for %(display_name)s"), {display_name: xblockInfo.get('display_name')}, true) %>
-          </p>
-        <% } %>
+      <p>
+        <%= interpolate(gettext("Change the settings for %(display_name)s"), {display_name: xblockInfo.get('display_name')}, true) %>
+      </p>
     </div>
 
     <form class="edit-settings-form" action="#">

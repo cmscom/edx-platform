@@ -429,6 +429,13 @@ class StaffLockTest(CourseOutlineTest):
             )
         )
 
+    def _verify_descendants_are_staff_only(self, item):
+        """Verifies that all the descendants of item are staff only"""
+        self.assertTrue(item.is_staff_only)
+        if hasattr(item, 'children'):
+            for child in item.children():
+                self._verify_descendants_are_staff_only(child)
+
     def test_units_can_be_locked(self):
         """
         Scenario: Units can be locked and unlocked from the course outline page
@@ -459,16 +466,19 @@ class StaffLockTest(CourseOutlineTest):
             And I enable explicit staff locking
             And I click save
             Then the subsection shows a staff lock warning
+            And all its descendants are staff locked
             And when I click on the subsection's configuration icon
             And I disable explicit staff locking
             And I click save
             Then the the subsection does not show a staff lock warning
         """
         self.course_outline_page.visit()
+        self.course_outline_page.expand_all_subsections()
         subsection = self.course_outline_page.section_at(0).subsection_at(0)
         self.assertFalse(subsection.has_staff_lock_warning)
         subsection.set_staff_lock(True)
         self.assertTrue(subsection.has_staff_lock_warning)
+        self._verify_descendants_are_staff_only(subsection)
         subsection.set_staff_lock(False)
         self.assertFalse(subsection.has_staff_lock_warning)
 
@@ -480,16 +490,19 @@ class StaffLockTest(CourseOutlineTest):
             And I enable explicit staff locking
             And I click save
             Then the section shows a staff lock warning
+            And all its descendants are staff locked
             And when I click on the section's configuration icon
             And I disable explicit staff locking
             And I click save
             Then the section does not show a staff lock warning
         """
         self.course_outline_page.visit()
+        self.course_outline_page.expand_all_subsections()
         section = self.course_outline_page.section_at(0)
         self.assertFalse(section.has_staff_lock_warning)
         section.set_staff_lock(True)
         self.assertTrue(section.has_staff_lock_warning)
+        self._verify_descendants_are_staff_only(section)
         section.set_staff_lock(False)
         self.assertFalse(section.has_staff_lock_warning)
 
@@ -658,6 +671,56 @@ class StaffLockTest(CourseOutlineTest):
         self.assertEqual(courseware.num_subsections, 2)
         StaffPage(self.browser).toggle_staff_view()
         self.assertEqual(courseware.num_subsections, 1)
+
+    def test_toggling_staff_lock_on_section_does_not_publish_draft_units(self):
+        """
+        Scenario: Locking and unlocking a section will not publish its draft units
+            Given I have a course with a section and unit
+            And the unit has a draft and published version
+            When I enable explicit staff lock on the section
+            And I disable explicit staff lock on the section
+            And I click the View Live button to switch to staff view
+            Then I see the published version of the unit
+        """
+        self.course_outline_page.visit()
+        self.course_outline_page.expand_all_subsections()
+        unit = self.course_outline_page.section_at(0).subsection_at(0).unit_at(0).go_to()
+        add_discussion(unit)
+        self.course_outline_page.visit()
+        self.course_outline_page.expand_all_subsections()
+        section = self.course_outline_page.section_at(0)
+        section.set_staff_lock(True)
+        section.set_staff_lock(False)
+        unit = section.subsection_at(0).unit_at(0).go_to()
+        unit.view_published_version()
+        courseware = CoursewarePage(self.browser, self.course_id)
+        courseware.wait_for_page()
+        self.assertEqual(courseware.num_xblock_components, 0)
+
+    def test_toggling_staff_lock_on_subsection_does_not_publish_draft_units(self):
+        """
+        Scenario: Locking and unlocking a subsection will not publish its draft units
+            Given I have a course with a subsection and unit
+            And the unit has a draft and published version
+            When I enable explicit staff lock on the subsection
+            And I disable explicit staff lock on the subsection
+            And I click the View Live button to switch to staff view
+            Then I see the published version of the unit
+        """
+        self.course_outline_page.visit()
+        self.course_outline_page.expand_all_subsections()
+        unit = self.course_outline_page.section_at(0).subsection_at(0).unit_at(0).go_to()
+        add_discussion(unit)
+        self.course_outline_page.visit()
+        self.course_outline_page.expand_all_subsections()
+        subsection = self.course_outline_page.section_at(0).subsection_at(0)
+        subsection.set_staff_lock(True)
+        subsection.set_staff_lock(False)
+        unit = subsection.unit_at(0).go_to()
+        unit.view_published_version()
+        courseware = CoursewarePage(self.browser, self.course_id)
+        courseware.wait_for_page()
+        self.assertEqual(courseware.num_xblock_components, 0)
 
 
 @attr('shard_2')

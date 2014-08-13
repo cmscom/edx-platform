@@ -77,7 +77,13 @@ class CourseOutlineItem(object):
 
     @property
     def has_staff_lock_warning(self):
+        """ Returns True iff the 'Contains staff only content' message is visible """
         return self.status_message == 'Contains staff only content' if self.has_status_message else False
+
+    @property
+    def is_staff_only(self):
+        """ Returns True if the visiblity state of this item is staff only (has a black sidebar) """
+        return "is-staff-only" in self.q(css=self._bounded_selector(''))[0].get_attribute("class")
 
     def edit_name(self):
         """
@@ -469,9 +475,11 @@ class CourseOutlinePage(CoursePage, CourseOutlineContainer):
         Expands all the subsections in this course.
         """
         for section in self.sections():
+            if section.is_collapsed:
+                section.toggle_expand()
             for subsection in section.subsections():
-                subsection.toggle_expand()
-
+                if subsection.is_collapsed:
+                    subsection.toggle_expand()
 
 
 class CourseOutlineModal(object):
