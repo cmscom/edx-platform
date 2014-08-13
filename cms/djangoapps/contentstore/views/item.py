@@ -630,7 +630,7 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
         return None
 
     is_xblock_unit = is_unit(xblock, parent_xblock)
-    is_unit_with_changes = modulestore().has_changes(xblock)
+    is_unit_with_changes = is_xblock_unit and modulestore().has_changes(xblock)
 
     if graders is None:
         graders = CourseGradingModel.fetch(xblock.location.course_key).graders

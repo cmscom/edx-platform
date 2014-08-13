@@ -135,6 +135,10 @@ function(Backbone, _, str, ModuleUtils) {
             return childInfo && childInfo.children.length > 0;
         },
 
+        needsAttention: function(){
+            return this.get('visibility_state') == 'needs_attention';
+        },
+
         /**
          * Return a list of convenience methods to check affiliation to the category.
          * @return {Array}
